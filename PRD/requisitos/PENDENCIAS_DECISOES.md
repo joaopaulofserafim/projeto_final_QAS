@@ -2,6 +2,8 @@
 
 Este registro consolida ambiguidades das personas/jornadas e lacunas identificadas ao derivar RF/RN/RNF. Nenhum item abaixo foi resolvido por suposicao. A autoridade e o responsavel pela decisao de produto ainda precisam ser identificados. Prioridade indica urgencia para fechar especificacao, nao ordem tecnica de implementacao.
 
+**Status:** DP-001..DP-019 permanecem **PENDENTES**; esta modelagem não os resolve. Não foi identificada autoridade institucional nomeada nos documentos disponíveis. Alternativas abaixo são opções de decisão, não decisões tomadas.
+
 | ID | Decisao pendente | Alternativas e consequencias | Artefatos/requisitos afetados | Prioridade |
 |---|---|---|---|---|
 | DP-001 | `SOLICITADA` ocupa ou nao disponibilidade antes de aprovacao? Como disputa solicitacoes simultaneas pendentes? | Bloquear ao solicitar reduz corrida, mas pedidos podem reter horario sem aceite; nao bloquear aumenta disputa na aprovacao. A regra nao esta nas fontes. | RN-004/005; RF-007..010, RF-016; J-SOL-004, J-RES-003 | Critica |
@@ -41,3 +43,22 @@ Este registro consolida ambiguidades das personas/jornadas e lacunas identificad
 5. **Metricas sem evidencia:** “conflitos evitados”, utilizacao e carga horaria podem ser apresentados de modo enganoso sem formulas e registros fonte (DP-010).
 6. **Metas de qualidade nao mensuradas:** desempenho, capacidade, disponibilidade e acessibilidade ainda nao tem metas quantitativas (DP-014).
 7. **Persistencia e corrida sem mecanismo aprovado:** a invariante esta especificada, mas banco e tecnica de exclusao mutua precisam de decisao e teste real (DP-017/DP-018).
+
+## Impactos arquiteturais para decisão (sem criar novas pendências)
+
+| Pendência | Status e alternativas a deliberar | Impacto arquitetural e risco se não decidida |
+|---|---|---|
+| DP-001 — `SOLICITADA` ocupa disponibilidade? | **PENDENTE.** Bloquear no envio retém horário enquanto aguarda; não bloquear permite disputa posterior pela aprovação. | A política decide quais estados entram na consulta e no ponto atômico, sem alterar a obrigação de no máximo um aceite conflitante. Sem decisão, não se fecha regra de disponibilidade nem cenários de corrida. |
+| DP-003 — matriz e escopo | **PENDENTE.** Delimitar por recurso/unidade/ação e atribuição/substituição institucional. | Identidade e Autorização deve receber escopo e revalidá-lo por alvo; sem matriz há risco de vazamento ou de bloqueio operacional excessivo. |
+| DP-004 — manutenção com reserva existente | **PENDENTE.** Impedir bloqueio até resolver compromisso; ou aceitar bloqueio com tratamento explícito e autorizado da reserva, sem cancelamento automático. | Manutenção e aceite usam o mesmo ponto atômico; sem política, manutenção pode não ser registrada ou compromisso existente pode ficar em conflito sem tratamento. |
+| DP-006 — transições e indisponibilidade durante espera | **PENDENTE.** Definir atores/eventos de `APROVADA→EM_USO` e `EM_USO→CONCLUIDA`, e destino de solicitação indisponível. | Movimentação é modelada como fato separado; associar automaticamente retirada/devolução ao estado da reserva antes da decisão pode gerar histórico e disponibilidade incoerentes. |
+| DP-007 — alteração/cancelamento | **PENDENTE.** Definir estados/campos/prazos/justificativas e se mudança de recurso restrito exige nova aprovação. | Revalidar e auditar alteração é requisito; sem elegibilidade não se pode expor transições ou liberar disponibilidade. Reserva iniciada não pode ser apagada. |
+| DP-009 — comunicação | **PENDENTE.** Atualização interna consultável ou canal externo decidido, com eventos, destinatário, entrega e retry. | A fronteira Comunicação pode existir sem provedor; escolher integração sem requisito/canal aprovado aumenta superfície e custo. Falha não pode reverter negócio. |
+| DP-011 — auditoria e privacidade | **PENDENTE.** Fixar retenção, conteúdo mínimo e perfis de consulta. | Escrita transacional com mudança é proposta; sem retenção/campos há riscos de exposição de dados e incapacidade de reconstrução/armazenamento. |
+| DP-014 — metas de qualidade | **PENDENTE.** Aprovar carga, latência/percentis, capacidade, disponibilidade/recuperação e critério de acessibilidade. | JMeter e quality gates não demonstram conformidade sem alvo e ambiente; não alegar performance ou disponibilidade. |
+| DP-016 — dados docentes | **PENDENTE.** Confirmar fonte/completude e política de agenda ausente/desatualizada. | Ausência de agenda não pode ser interpretada como disponibilidade; decisão influencia integração, minimização e operação de reserva. |
+| DP-017 — SGBD/ORM | **PENDENTE.** Comparar mecanismo permitido, transação, intervalos, suporte em Testcontainers e operação; relacional permanece recomendação preliminar, não decisão. | A escolha limita locking/constraints e atomicidade de auditoria; sem prova, não se confirma a invariante. |
+| DP-018 — mecanismo de concorrência | **PENDENTE.** Comparar lock transacional por recurso, constraint temporal e serialização/controle otimista, ou proteção combinada após escolha do SGBD. | Nunca consulta+gravação sem proteção; riscos incluem dupla reserva, contenção, deadlock, abortos e retries incorretos. Requer teste concorrente real posterior. |
+| DP-019 — identidade e sessão | **PENDENTE.** Autenticação própria versus provedor institucional/external, conforme exigência acadêmica/institucional. | A autorização central permanece independente do provedor; sem política de sessão/logout não se conclui revogação. |
+
+As propostas técnicas associadas estão em `PRD/arquitetura/adr/ADR-001.md`..`ADR-009.md` e nos C4/UML. São arquiteturas para revisão, não aprovações nem evidências de teste. Não foram adicionadas pendências novas: esta tabela explicita apenas impacto de itens já identificados.

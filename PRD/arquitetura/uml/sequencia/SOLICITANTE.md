@@ -9,7 +9,7 @@ Participantes sao componentes conceituais definidos em `../../c4/NIVEL_3_COMPONE
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-001 — Autenticacao
+    %% SEQ-SOL-001 — Autenticacao
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -28,7 +28,7 @@ sequenceDiagram
     else Credencial invalida ou conta sem acesso
         Auth-->>Entrada: Negado sem revelar qual dado falhou
         Entrada-->>Web: Falha de autenticacao
-        Web-->>Sol: Mensagem segura; permanece fora da area protegida
+        Web-->>Sol: Mensagem segura. Permanece fora da area protegida
     end
     Sol->>Web: Encerra sessao
     Web->>Entrada: Solicita encerramento
@@ -50,7 +50,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-002 — Consulta de recursos
+    %% SEQ-SOL-002 — Consulta de recursos
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -104,7 +104,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-003 — Consulta de disponibilidade
+    %% SEQ-SOL-003 — Consulta de disponibilidade
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -126,7 +126,7 @@ sequenceDiagram
         Disp->>Disp: Aplicar intervalo [inicio, termino) e estados ocupantes
         Note over Disp: Efeito de SOLICITADA na ocupacao depende DP-001
         alt Recurso/docente livre e sem manutencao
-            Disp-->>Entrada: Pode prosseguir; nao garante aceite
+            Disp-->>Entrada: Pode prosseguir. Nao garante aceite
             Entrada-->>Web: Disponibilidade consultada
             Web-->>Sol: Informa resultado e que nova validacao ocorrera no envio
         else Conflito, manutencao ou indisponibilidade docente
@@ -154,7 +154,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-004 — Criacao de reserva
+    %% SEQ-SOL-004 — Criacao de reserva
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -181,15 +181,15 @@ sequenceDiagram
         Disp-->>Reservas: Indisponivel
         Reservas-->>Entrada: Recusa + motivo
         Entrada-->>Web: Conflito/indisponibilidade
-        Web-->>Sol: Informa motivo; permite rever criterio
+        Web-->>Sol: Informa motivo. Permite rever criterio
     else Elegivel
         Disp-->>Reservas: Elegivel neste instante
-        Note over Reservas,Persistencia: Revalidar e efetivar aceite de modo atomico; regra SOLICITADA pendente DP-001
+        Note over Reservas,Persistencia: Revalidar e efetivar aceite de modo atomico. Regra SOLICITADA pendente DP-001
         Reservas->>Persistencia: Gravar reserva/estado e evento de auditoria na mesma unidade atomica
         alt Persistencia confirma sem conflito concorrente
             Persistencia-->>Reservas: Estado registrado
             Reservas->>Auditoria: Confirmar evento de estado (mesma transacao logica)
-            Note over Reservas: Restrito inicia SOLICITADA; estado de recurso comum aguarda decisao
+            Note over Reservas: Restrito inicia SOLICITADA. Estado de recurso comum aguarda decisao
             Reservas-->>Entrada: Identificador e estado confirmado
             Entrada-->>Web: Resultado confirmado
             Web-->>Sol: Confirma recebimento e mostra estado real
@@ -198,7 +198,7 @@ sequenceDiagram
                 Comunicacao-->>Sol: Confirma comunicacao ou sinaliza falha sem reverter reserva
             end
         else Disputa perdida / falha atomica
-            Persistencia-->>Reservas: Conflito; nao houve aceite
+            Persistencia-->>Reservas: Conflito. Nao houve aceite
             Reservas-->>Entrada: Indisponibilidade atual
             Entrada-->>Web: Resultado conflitante
             Web-->>Sol: Solicita outro periodo/recurso
@@ -216,7 +216,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-005 — Alteracao de reserva
+    %% SEQ-SOL-005 — Alteracao de reserva
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -235,14 +235,14 @@ sequenceDiagram
     alt Reserva alheia, inexistente ou estado inelegivel
         Reservas-->>Entrada: Negar sem alterar
         Entrada-->>Web: Negacao/estado atual
-        Web-->>Sol: Informa resultado; reserva preservada
+        Web-->>Sol: Informa resultado. Reserva preservada
     else Elegivel conforme regra definida
         Reservas->>Disp: Validar periodo, recurso, docente e manutencao
         Disp->>Persistencia: Consultar disponibilidade corrente
         Persistencia-->>Disp: Estado corrente
         alt Novo periodo invalido ou conflitante
             Disp-->>Reservas: Negar alteracao
-            Reservas-->>Entrada: Motivo; dados originais preservados
+            Reservas-->>Entrada: Motivo. Dados originais preservados
             Entrada-->>Web: Conflito/validacao
             Web-->>Sol: Solicita correcao
         else Disponivel
@@ -258,7 +258,7 @@ sequenceDiagram
                     Reservas->>Comunicacao: Solicita aviso pos-confirmacao
                 end
             else Dados mudaram em paralelo
-                Reservas-->>Entrada: Estado atualizado; exigir revisao
+                Reservas-->>Entrada: Estado atualizado. Exigir revisao
                 Entrada-->>Web: Dados desatualizados
                 Web-->>Sol: Atualiza detalhe sem sobrescrever alteracao alheia
             end
@@ -275,7 +275,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-006 — Cancelamento de reserva
+    %% SEQ-SOL-006 — Cancelamento de reserva
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -291,11 +291,11 @@ sequenceDiagram
     Auth-->>Entrada: Autorizacao ou negacao
     Entrada->>Reservas: Revalidar estado atual e regra de elegibilidade
     alt Sem autorizacao ou reserva inexistente/alheia
-        Reservas-->>Entrada: Negar; nenhum dado alterado
+        Reservas-->>Entrada: Negar. Nenhum dado alterado
         Entrada-->>Web: Acesso negado/nao encontrado
         Web-->>Sol: Informa sem expor reserva de terceiro
     else Estado nao elegivel (regra pendente)
-        Reservas-->>Entrada: Negar; reserva preservada
+        Reservas-->>Entrada: Negar. Reserva preservada
         Entrada-->>Web: Estado atual e motivo
         Web-->>Sol: Informa que cancelamento nao ocorreu
     else Cancelamento permitido
@@ -328,7 +328,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-SOL-007 — Consulta das proprias reservas
+    %% SEQ-SOL-007 — Consulta das proprias reservas
     actor Sol as Solicitante
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao

@@ -9,7 +9,7 @@ Participantes refletem componentes de [C4 nivel 3](../../c4/NIVEL_3_COMPONENTES.
 
 ```mermaid
 sequenceDiagram
-    title SEQ-ADM-001 — Autenticacao administrativa
+    %% SEQ-ADM-001 — Autenticacao administrativa
     actor Adm as Administrador
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -48,7 +48,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-ADM-002 — Gerenciamento de usuarios
+    %% SEQ-ADM-002 — Gerenciamento de usuarios
     actor Adm as Administrador
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -74,7 +74,7 @@ sequenceDiagram
             Entrada-->>Web: Resultado sem mutacao indevida
             Web-->>Adm: Mostra cadastro, vazio ou campos a corrigir
         else Bloqueio/alteracao de permissao afeta reserva ativa
-            Admin-->>Entrada: Impacto detectado; politica DP-005 pendente
+            Admin-->>Entrada: Impacto detectado. Politica DP-005 pendente
             Entrada-->>Web: Mostrar impacto e pedir decisao conforme regra
             Web-->>Adm: Nao cancela reserva automaticamente
         else Alteracao permitida
@@ -97,7 +97,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-ADM-003 — Cadastro e atualizacao de recursos
+    %% SEQ-ADM-003 — Cadastro e atualizacao de recursos
     actor Adm as Administrador
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -115,12 +115,12 @@ sequenceDiagram
     Persistencia-->>Admin: Registro atual e impactos
     alt Sem autorizacao, cadastro inexistente/duplicado ou dados invalidos
         Admin-->>Entrada: Negar ou solicitar correcao
-        Entrada-->>Web: Erro; preservar estado anterior
+        Entrada-->>Web: Erro. Preservar estado anterior
         Web-->>Adm: Apresenta motivo
     else Reserva/movimento ativo afetado por desativacao
-        Admin-->>Entrada: Impacto; regra DP-005 pendente
+        Admin-->>Entrada: Impacto. Regra DP-005 pendente
         Entrada-->>Web: Exibir relacoes existentes
-        Web-->>Adm: Preservar reservas/historico; sem cancelamento automatico
+        Web-->>Adm: Preservar reservas/historico. Sem cancelamento automatico
     else Cadastro/alteracao valida
         Admin->>Catalogo: Aplicar cadastro ou situacao permitida
         Catalogo->>Persistencia: Gravar dados
@@ -142,7 +142,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-ADM-004 — Bloqueio de manutencao
+    %% SEQ-ADM-004 — Bloqueio de manutencao
     actor Adm as Administrador
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -167,7 +167,7 @@ sequenceDiagram
         Disp-->>Admin: Impacto encontrado
         Admin-->>Entrada: Decisao de politica pendente DP-004
         Entrada-->>Web: Apresentar reservas afetadas
-        Web-->>Adm: Nao cancelar/remanejar; requer decisao institucional
+        Web-->>Adm: Nao cancelar/remanejar. Requer decisao institucional
     else Sem reserva preexistente coincidente
         Admin->>Persistencia: Registrar periodo e bloquear novas alocacoes coincidentes
         Persistencia->>Auditoria: Registrar ator, instante, recurso, periodo e operacao
@@ -187,7 +187,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-ADM-005 — Consulta de auditoria
+    %% SEQ-ADM-005 — Consulta de auditoria
     actor Adm as Administrador
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -234,7 +234,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-ADM-006 — Geracao de relatorios
+    %% SEQ-ADM-006 — Geracao de relatorios
     actor Adm as Administrador
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
