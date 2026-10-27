@@ -1,47 +1,48 @@
-# C4 — Nivel 2: Conteineres
+# C4 — Nível 2: Contêineres
 
-**Objetivo:** Mostrar unidades executaveis e armazenamento interno, responsabilidades, tecnologias definidas/pedentes e comunicacoes.  
-**Limite:** Um contêiner C4 e processo/aplicacao/armazenamento, nao controller, service ou repository.  
-**Status:** Proposta; escolha de contêiner de persistencia e UI permanece pendente.
+**Objetivo:** mostrar unidades executáveis e o armazenamento lógico interno.
+**Limite:** contêiner C4 é aplicação/processo/armazenamento; controllers, serviços e módulos lógicos são componentes de nível 3, não contêineres.
+**Status:** proposta. Tecnologias não mandatórias permanecem em aberto.
 
 ```mermaid
 C4Container
-    title Conteineres — Sistema de Organizacao de Recursos
+    title Contêineres — Sistema de Organização de Recursos
 
-    Person(solicitante, "Solicitante", "Pesquisa e solicita recursos.")
-    Person(responsavel, "Responsavel", "Decide pedidos autorizados e controla movimentacoes.")
-    Person(admin, "Administrador", "Administra cadastros e consulta operacao.")
+    Person(solicitante, "Solicitante", "Pesquisa e acompanha reservas próprias.")
+    Person(responsavel, "Responsável", "Atua em solicitações e movimentações do escopo autorizado.")
+    Person(admin, "Administrador", "Administra dados e consulta operação.")
 
-    System_Boundary(sistema, "Sistema de Organizacao de Recursos") {
-        Container(web, "Aplicacao Web", "Framework de interface pendente", "Apresenta consultas, formularios, filas, feedback e visualizacoes responsivas.")
-        Container(back, "Aplicacao Back-end", "Java 21, Spring Boot 3.x", "Modulos de acesso, recursos, disponibilidade, reservas, decisoes, movimentos, auditoria, notificacao e relatorios.")
-        ContainerDb(dados, "Persistencia transacional", "SGBD/tecnologia pendente", "Armazena dados operacionais, reservas e eventos necessarios para consistencia/auditoria.")
+    System_Boundary(sistema, "Sistema de Organização de Recursos") {
+        Container(web, "Aplicação Web", "Tecnologia de interface pendente", "Interação responsiva: pesquisa, formulários, fila, consulta e feedback.")
+        Container(app, "Aplicação", "Java 21 / Spring Boot 3.x (referência)", "Casos de uso, autorização server-side, domínio, transações, auditoria e relatórios.")
+        ContainerDb(store, "Persistência transacional", "SGBD/ORM pendentes", "Dados operacionais, reservas, períodos de manutenção, movimentações e eventos de auditoria.")
     }
 
-    System_Ext(canal, "Canal/servico de notificacao (condicional)", "Provedor e protocolo pendentes; pode nao existir nesta implantacao.")
-
     Rel(solicitante, web, "Pesquisa, solicita e acompanha")
-    Rel(responsavel, web, "Decide e registra movimentacoes no escopo")
+    Rel(responsavel, web, "Consulta, decide e registra movimentações autorizadas")
     Rel(admin, web, "Administra e consulta")
-    Rel(web, back, "Solicita operacoes autenticadas; contrato/protocolo detalhado pendente")
-    Rel(back, dados, "Le e grava dados; reserva, auditoria e decisao exigem resultado atomico")
-    Rel(back, canal, "Entrega comunicacoes apos resultado de negocio, se integrado")
+    Rel(web, app, "Solicita operações e apresenta resultados. Protocolo/contrato não selecionado")
+    Rel(app, store, "Lê e grava por adaptadores. Consistência transacional requerida")
 ```
 
-## Conteineres
+## Contêineres e responsabilidades
 
-| Conteiner | Responsabilidade | Tecnologia/status | Relacionamentos/dados |
-|---|---|---|---|
-| Aplicacao Web | Interface por perfil, pesquisa, formularios, feedback e apresentacao de consultas/relatorios. Nao e autoridade para permissao ou regras. | Framework nao selecionado. | Personas -> Web -> Back-end; dados de entrada e resultados minimizados. |
-| Aplicacao Back-end | Casos de uso, autorizacao, regras, transacoes, auditoria e coordenacao de adaptadores. | Java 21 e Spring Boot 3.x definidos como referencia. | Web -> Back-end; Back-end -> Persistencia; Back-end -> canal externo opcional. |
-| Persistencia transacional | Preservar cadastro, disponibilidade, estado, movimentacao e auditoria com atomicidade necessaria. | Banco/engine/ORM pendentes (DP-017). | Leitura/escrita interna; nao e acesso direto de personas. |
-| Canal externo | Entrega de avisos quando selecionado. | Provedor, protocolo e modo de falha pendentes (DP-009). | Back-end solicita entrega; falha nao desfaz negocio (RN-023). |
+| Contêiner | Limite e responsabilidade | Tecnologia/estado |
+|---|---|---|
+| Aplicação Web | Apresentação dos fluxos por perfil, entrada de critérios/dados e feedback; não decide autorização ou disponibilidade. | Framework, modo de sessão e protocolo em aberto. |
+| Aplicação | Casos de uso, validações de domínio, autorização por ação/alvo, transações e coordenação dos componentes nível 3. | Java 21 e Spring Boot 3.x são a referência do escopo, ainda sem implementação. |
+| Persistência transacional | Um limite lógico de consistência para reservas, bloqueios, movimentos e auditoria. | Recomendação inicial relacional; produto, versão, ORM e estratégia temporal aguardam DP-017. |
 
-## Justificativa da forma de implantacao
+## Justificativa arquitetural e concorrência
 
-Proposta de monolito modular: uma fronteira de transacao simplifica a invariante de nao aceitar sobreposicoes e registrar auditoria, reduz custo operacional da equipe academica e permite integrar persistencia real com Testcontainers. Dividir em microservicos criaria consistencia distribuida para reserva/auditoria sem requisito de escala independente. O monolito nao significa pacote unico: limites de modulo e contratos internos estao no nivel 3.
+Monólito modular é a forma inicial recomendada: reduz custo operacional e mantém reserva/auditoria na mesma fronteira transacional. Não há evidência de necessidade de escalabilidade independente que justifique microserviços; um único processo não implica módulo sem fronteiras. Ver ADR-001/002.
 
-O armazenamento e representado por um unico contêiner lógico, sem escolher banco. A estrategia concreta de concorrencia depende de DP-001 (estados que ocupam) e DP-017 (capacidade/engine). A interface Web e o protocolo de chamada ainda nao foram escolhidos; nao se inventa REST/endpoint.
+O armazenamento aparece como contêiner lógico, não decisão de banco. A criação, aprovação, alteração e manutenção devem compartilhar uma proteção atômica para os recursos/intervalos em disputa, revalidando o estado e registrando auditoria no mesmo resultado. Não basta consulta seguida de gravação. Alternativas e a corrida aprovação versus nova solicitação estão em ADR-004 e `uml/sequencia/CONCORRENCIA.md`; DP-001, DP-017 e DP-018 permanecem abertas.
 
-**Requisitos relacionados:** RF-001..RF-036; RN-001..RN-024; RNF-001..RNF-014, em especial RNF-004, 005, 008 e 011.  
+## Integrações
+
+Não há contêiner externo no desenho base porque as fontes não confirmam serviço de identidade, agenda docente, canal ou provedor de notificação. Comunicação é uma fronteira lógica interna; se DP-009 selecionar provedor, será um sistema externo condicional, chamado somente após confirmação do negócio. A falha de entrega não reverte reserva (RN-023). Não se pressupõe REST, mensageria nem acesso anônimo.
+
+**Requisitos relacionados:** RF-001..RF-036; RN-001..RN-024; RNF-001..RNF-014.
 **ADRs:** ADR-001, ADR-003, ADR-004, ADR-007.
+**Pendências:** DP-001, DP-009, DP-012, DP-017..DP-019.

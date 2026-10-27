@@ -1,156 +1,114 @@
-# UML de Sequencia — Concorrencia de Reservas
+# UML de Sequência — Concorrência de Reservas
 
-## SEQ-CRIT-001 — Duas solicitacoes para o mesmo recurso/periodo
+## SEQ-CRIT-001 — Aprovação concorrente com nova solicitação
 
-**Objetivo:** demonstrar que consultas simultaneas podem ver disponibilidade anterior, mas dois aceites conflitantes nunca sao confirmados (RF-008, RN-002/RN-005, RNF-004).  
-**Cenario:** Solicitante A e Solicitante B tentam Sala 101, 20/11, 14:00–16:00. A disponibilidade consultada antes do envio estava livre.  
-**Limite:** `Ponto de integridade` e fronteira conceitual, nao representa tecnologia selecionada. Estados que ocupam disponibilidade e efeito de `SOLICITADA` dependem DP-001.
+**Objetivo:** documentar a disputa entre uma solicitação restrita pendente A e uma nova solicitação B para o mesmo recurso/período; nenhum par conflitante pode resultar aceito.
+**Base:** J-SOL-004, J-RES-003, J-ADM-007; RF-006..RF-009, RF-016, RF-026, RF-030; RN-001..RN-007, RN-011, RN-016; RNF-004/005/007/011.
+**Status:** comportamento arquitetural proposto; banco/mecanismo não selecionados. `SOLICITADA` e estado inicial de recurso comum seguem DP-001. O diagrama não decide qual pedido ganha em termos de negócio.
 
 ```mermaid
 sequenceDiagram
-    title SEQ-CRIT-001 — Solicitacoes concorrentes
-    actor A as Solicitante A
-    actor B as Solicitante B
-    actor Resp as Responsavel autorizado
-    participant WebA as Aplicacao Web A
-    participant WebB as Aplicacao Web B
-    participant Entrada as Entrada da Aplicacao
-    participant Auth as Identidade e Autorizacao
-    participant Reservas as Reservas e Transicoes
-    participant Decisao as Decisao de Aprovacao
-    participant Disp as Disponibilidade e Integridade
-    participant Persistencia as Persistencia transacional
-    participant Auditoria as Auditoria
+    %% SEQ-CRIT-001 — Aprovação contra nova solicitação
+    actor SolA as Solicitante A
+    actor SolB as Solicitante B
+    actor Resp as Responsável autorizado
+    participant WebA as Aplicação Web A
+    participant WebB as Aplicação Web B
+    participant Entrada as Entrada da Aplicação
+    participant Auth as Identidade e Autorização
+    participant Decisao as Decisão de Aprovação
+    participant Reserva as Reservas e Transições
+    participant Integridade as Disponibilidade e Integridade
+    participant Store as Persistência transacional
+    participant Audit as Auditoria
 
-    par Consulta anterior de A
-        A->>WebA: Consulta Sala 101, 14:00-16:00
-        WebA->>Entrada: Consultar disponibilidade
-        Entrada->>Disp: Avaliar periodo
-        Disp->>Persistencia: Ler ocupacao atual
-        Persistencia-->>Disp: Livre naquele instante
-        Disp-->>WebA: Disponivel (nao reservado)
-        WebA-->>A: Apresenta resultado informativo
-    and Consulta anterior de B
-        B->>WebB: Consulta Sala 101, 14:00-16:00
-        WebB->>Entrada: Consultar disponibilidade
-        Entrada->>Disp: Avaliar periodo
-        Disp->>Persistencia: Ler ocupacao atual
-        Persistencia-->>Disp: Livre naquele instante
-        Disp-->>WebB: Disponivel (nao reservado)
-        WebB-->>B: Apresenta resultado informativo
+    Note over SolA,Store: A é SOLICITADA e ainda não aprovada. B pede o mesmo recurso e período
+    par Responsável aprova A
+        Resp->>WebA: Confirma aprovação de A
+        WebA->>Entrada: Envia decisão
+        Entrada->>Auth: Autorizar ator, escopo, alvo e ação
+        Auth-->>Entrada: Principal e permissão vigentes
+        Entrada->>Decisao: Aprovar A
+        Decisao->>Integridade: Tentar aceite de A no ponto comum de integridade
+        Integridade->>Store: Iniciar unidade atômica e proteger recurso
+        Store->>Store: Reler A, estado atual, ocupações, docente e manutenção
+    and Solicitante envia B
+        SolB->>WebB: Confirma nova solicitação B
+        WebB->>Entrada: Envia solicitação
+        Entrada->>Auth: Autorizar identidade e recurso
+        Auth-->>Entrada: Principal e permissão vigentes
+        Entrada->>Reserva: Registrar pedido B conforme política vigente
+        Reserva->>Integridade: Verificar/aceitar B no mesmo ponto de integridade
+        Integridade->>Store: Obter proteção para o mesmo recurso
+        Store->>Store: Reler ocupações e estado atual
     end
-
-    par Confirmacao concorrente de A
-        A->>WebA: Confirma solicitacao
-        WebA->>Entrada: Envia pedido A
-        Entrada->>Auth: Validar identidade/permissao A
-        Entrada->>Reservas: Solicitar aceite A
-        Reservas->>Disp: Revalidar periodo, recurso e estados ocupantes
-        Disp->>Persistencia: Ponto atomico: tentar aceitar A
-    and Confirmacao concorrente de B
-        B->>WebB: Confirma solicitacao
-        WebB->>Entrada: Envia pedido B
-        Entrada->>Auth: Validar identidade/permissao B
-        Entrada->>Reservas: Solicitar aceite B
-        Reservas->>Disp: Revalidar periodo, recurso e estados ocupantes
-        Disp->>Persistencia: Ponto atomico: tentar aceitar B
-    end
-
-    alt A vence o ponto atomico
-        Persistencia->>Persistencia: Validar ocupacao + gravar aceite A e auditoria na mesma unidade
-        Persistencia-->>Disp: Commit A; A aceito
-        Disp-->>Reservas: Sucesso A
-        Reservas-->>WebA: Reserva/estado confirmado
-        WebA-->>A: Confirma aceite A
-        Disp->>Persistencia: Revalidar B contra A ja confirmada
-        Persistencia-->>Disp: B conflita
-        Disp-->>Reservas: B conflita; nao aceitar
-        Reservas-->>WebB: Indisponibilidade atual
-        WebB-->>B: Informa conflito e sugere novo periodo/recurso
-    else B vence o ponto atomico
-        Persistencia->>Persistencia: Validar ocupacao + gravar aceite B e auditoria na mesma unidade
-        Persistencia-->>Disp: Commit B; B aceito
-        Disp-->>Reservas: Sucesso B
-        Reservas-->>WebB: Reserva/estado confirmado
-        WebB-->>B: Confirma aceite B
-        Disp->>Persistencia: Revalidar A contra B ja confirmada
-        Persistencia-->>Disp: A conflita
-        Disp-->>Reservas: A conflita; nao aceitar
-        Reservas-->>WebA: Indisponibilidade atual
-        WebA-->>A: Informa conflito e sugere novo periodo/recurso
-    end
-
-    Note over A,Resp: Variante adicional do SEQ-CRIT-001: A ja possui pedido restrito SOLICITADA
-    alt DP-001 define SOLICITADA como bloqueante
-        B->>WebB: Tenta nova solicitacao para mesmo recurso/periodo
-        WebB->>Entrada: Envia pedido B
-        Entrada->>Disp: Revalidar ocupacao incluindo SOLICITADA
-        Disp-->>Entrada: B indisponivel pela politica aprovada
-        Entrada-->>WebB: Conflito/indisponibilidade
-        WebB-->>B: Informa que o recurso aguarda decisao
-        Resp->>WebA: Decide pedido A
-        WebA->>Entrada: Solicita aprovacao
-        Entrada->>Decisao: Validar escopo, estado e disponibilidade
-        Decisao->>Disp: Revalidar e tentar confirmar A com Persistencia atomica
-        Disp->>Persistencia: Gravar A + auditoria sob guarda de integridade
-        Persistencia-->>Decisao: A aprovada ou conflito atualizado
-    else DP-001 nao define SOLICITADA como bloqueante
-        par Responsavel aprova A
-            Resp->>WebA: Aprova solicitacao A
-            WebA->>Entrada: Envia aprovacao
-            Entrada->>Decisao: Revalidar autorizacao e SOLICITADA
-            Decisao->>Disp: Revalidar e tentar aceitar A atomicamente
-        and Solicitante B cria novo pedido
-            B->>WebB: Confirma novo pedido B
-            WebB->>Entrada: Envia solicitacao
-            Entrada->>Reservas: Revalidar e solicitar aceite B
-            Reservas->>Disp: Revalidar e tentar aceitar B atomicamente
-        end
-        alt A vence
-            Disp->>Persistencia: Gravar APROVADA A + auditoria sob guarda atomica
-            Persistencia-->>Decisao: A confirmada
-            Persistencia-->>Reservas: B conflita; nao aceitar
-            Reservas-->>WebB: Indisponibilidade atual
-            WebB-->>B: Informa conflito
-        else B vence conforme politica de recurso comum
-            Disp->>Persistencia: Gravar B + auditoria sob guarda atomica
-            Persistencia-->>Reservas: B confirmada
-            Persistencia-->>Decisao: A conflita; nao aprovar
-            Decisao-->>WebA: A permanece sem aceite; destino depende DP-006
-            WebA-->>Resp: Informa conflito e estado atualizado
-        end
+    Note over Integridade,Store: A e B não podem validar e gravar em trilhas independentes. Serialização/constraint ainda depende de DP-017/018
+    alt A confirma primeiro e o aceite é elegível
+        Store->>Store: Gravar APROVADA + auditoria na mesma unidade atômica
+        Store-->>Integridade: Commit de A
+        Integridade-->>Decisao: A confirmada
+        Decisao-->>Entrada: Aprovação confirmada
+        Entrada-->>WebA: Estado atual APROVADA
+        WebA-->>Resp: Confirma resultado
+        Store-->>Integridade: Revalidar B contra A confirmada
+        Integridade-->>Reserva: B conflita. Não aceitar em conflito
+        Reserva-->>Entrada: Conflito/indisponibilidade de B
+        Entrada-->>WebB: Resultado sem sucesso presumido
+        WebB-->>SolB: Informa conflito e mantém dados para ajuste
+    else B confirma primeiro sob política definida e ocupa disponibilidade
+        Store->>Store: Gravar somente o estado permitido de B + auditoria se aplicável
+        Store-->>Integridade: Commit de B conforme política
+        Integridade-->>Reserva: Resultado confirmado de B
+        Reserva-->>Entrada: Estado real de B
+        Entrada-->>WebB: Resultado de B confirmado
+        WebB-->>SolB: Exibe estado retornado, não inferido
+        Store-->>Integridade: Revalidar A contra B confirmada
+        Integridade-->>Decisao: A conflita. Não aprovar
+        Decisao-->>Entrada: A não aprovada. Destino não presumido (DP-006)
+        Entrada-->>WebA: Estado e conflito atualizados
+        WebA-->>Resp: Informa que a aprovação não ocorreu
+    else Falha técnica ou auditoria antes do commit
+        Store-->>Integridade: Rollback/resultado inconclusivo
+        Integridade-->>Entrada: Não confirmar operação
+        Entrada-->>WebA: Falha segura. Consultar estado atual
+        Entrada-->>WebB: Falha segura. Consultar estado atual
     end
 ```
 
-## Invariante e condicao de conflito
+## Invariante
 
-Para recurso R e periodos semiabertos `[inicio, fim)`, duas alocacoes sao conflitantes quando `inicioA < fimB E inicioB < fimA`. Alocacoes adjacentes nao conflitam. O estado final deve satisfazer: para qualquer par de reservas aceitas do mesmo recurso, nenhum par conflita. Ambas as confirmacoes podem receber sucesso somente quando os recursos/intervalos nao se sobrepoem ou uma regra institucional aprovada tornar um deles nao bloqueante; no mesmo recurso/horario, exatamente uma pode ser aceita.
+Para intervalos semiabertos `[início, fim)`, conflito é `inícioA < fimB E inícioB < fimA`; intervalos adjacentes não conflitam. Para qualquer par de alocações aceitas que bloqueiam disponibilidade para o mesmo recurso, não pode haver sobreposição. `APROVADA` e `EM_USO` bloqueiam (RN-004); manutenção também bloqueia novos aceites coincidentes (RN-007). Efeito de `SOLICITADA` ainda não foi decidido. A regra de concorrência assegura exclusão entre aceites bloqueantes sem definir se pedidos pendentes reservam horário.
 
-Participam da verificacao os estados que RN-004 define como ocupantes (`APROVADA`, `EM_USO`), manutencao e professor alocado. A participacao de `SOLICITADA` ainda depende DP-001 e nao deve ser suposta. A segunda operacao, ao perder a disputa, recebe conflito/indisponibilidade e nao recebe uma reserva aceita. Mudanca de estado e auditoria confirmada devem pertencer a mesma unidade de integridade.
+## Sequência de proteção requerida
 
-## Variante critica — Aprovacao pendente disputa com nova solicitacao
+Toda criação/aceite, aprovação, alteração de alocação e inclusão de manutenção que concorra pelo mesmo recurso deve:
 
-Uma solicitacao restrita A permanece `SOLICITADA`; uma nova solicitacao B para recurso/periodo igual concorre com a aprovacao de A. Ambas chegam a `Disponibilidade e Integridade` e tentam aceitar no mesmo `Ponto atomico de integridade`:
+1. atravessar o mesmo ponto de integridade;
+2. validar autorização, versão/estado atual e período;
+3. obter proteção transacional pelo recurso (para múltiplos recursos, ordem determinística);
+4. reconsultar os ocupantes, manutenção, cadastro e agenda docente relevante dentro da seção protegida;
+5. efetivar mudança e auditoria juntas ou falhar sem anunciar sucesso;
+6. converter disputa perdida em conflito de negócio; não expor exceções internas.
 
-- Se a aprovacao de A confirmar primeiro, gravar `APROVADA` + auditoria; a confirmacao de B revalida contra A e e recusada como conflito.
-- Se a solicitacao B confirmar primeiro segundo a politica de recurso comum, a aprovacao de A revalida e nao pode produzir aceite conflitante; A recebe indisponibilidade e seu destino (permanece `SOLICITADA` ou outro estado autorizado) aguarda DP-006.
-- Se DP-001 decidir que `SOLICITADA` bloqueia disponibilidade, B pode ser recusada desde o envio enquanto A aguarda; isso altera fila/experiencia e precisa estar registrado como regra aprovada.
+**Pré-consulta:** útil para UX, mas não adquire o direito de reservar nem elimina a revalidação no instante da gravação.
 
-Em qualquer ramo, no maximo uma reserva ocupante e aceita. Resultado de aprovacao nunca e repetido se o estado ja tiver sido resolvido (RN-011). Mudancas sao auditadas; notificacao e pos-confirmacao e nao altera o resultado.
+## Variações de ordem e questões pendentes
 
-## Alternativas de integridade
+- **Duas novas solicitações simultâneas:** ambas devem passar pelo mesmo ponto protegido. Se a política aprovada resultar em duas aceitações bloqueantes para períodos sobrepostos, somente uma pode confirmar; a segunda relê o vencedor e recebe conflito. Se a política produzir solicitações `SOLICITADA` não bloqueantes, a concorrência entre pendências e a decisão final continuam sujeitas a DP-001, e nenhuma dupla aprovação futura pode contornar a proteção.
+- **Aprovação A vence:** commit `SOLICITADA → APROVADA` + auditoria; B revalida e é impedida se conflitante.
+- **B vence:** somente se a política do pedido B resultar em estado que bloqueie disponibilidade; aprovação A revalida e não é aceita. O estado final de A se perder disponibilidade permanece DP-006.
+- **DP-001: `SOLICITADA` bloqueia?** Se sim, B pode ser impedida enquanto A aguarda, retendo horário; se não, B ainda pode disputar o aceite final. Nenhuma alternativa é selecionada.
+- **Manutenção versus aprovação/reserva:** mesma proteção; após manutenção efetivada, novos usos conflitantes são impedidos. Compromisso pré-existente não é cancelado/remanejado; política DP-004.
+- **Vários recursos:** atomicidade tudo-ou-nada versus parcial pendente DP-013; locks, se usados, ordenados deterministicamente para reduzir deadlock.
+- **Falha/retry:** estado de retorno deve ser distinguível de conflito e sucesso; repetição segura/idempotência e reconciliação de operação inconclusiva precisam ser definidas na seleção técnica (DP-014/017/018).
 
-| Alternativa | Vantagens | Limitacoes/riscos | Evidencia necessaria |
+## Alternativas de mecanismo
+
+| Alternativa | Benefícios | Limitações e riscos | Evidência futura |
 |---|---|---|---|
-| Bloqueio transacional por recurso/periodo | Serializa disputa e torna a leitura/revalidacao proxima do aceite explicita; conceitualmente simples. | Granularidade e semantica dependem do SGBD; bloqueio muito amplo reduz throughput; ordenacao de multi-recursos pode causar deadlock; retentativas precisam ser tratadas. Um mutex apenas em memoria nao protege multiplas instancias. | Teste de integracao com duas transacoes reais e corrida repetida no SGBD escolhido; verificar deadlock/timeout e mensagem de perdedor. |
-| Restricao de integridade temporal no armazenamento | Defesa final proxima dos dados; impede que outro caminho de escrita burle a regra. | Suporte para intervalo/exclusion varia por SGBD; modelo de estados bloqueantes e consultas de intervalo podem nao caber em restricao simples; rejeicao deve ser convertida em conflito de negocio. | Testcontainer do banco escolhido verificando sobreposicao, adjacencia, estados, manutencao e erro de constraint convertido em resposta segura. |
-| Isolamento serializavel ou controle otimista com conflito/retry | Pode detectar leituras concorrentes sem lock manual amplo; preserva concorrencia para periodos independentes quando suportado. | Pode abortar transacoes sob carga; retry e idempotencia complicam casos de uso; sem repeticao segura a interface pode receber erro transitario. Semantica/performance variam por SGBD. | Teste de concorrencia e carga com banco real, incluindo abort/retry e assertiva de no maximo um aceite. |
-| Consulta simples seguida de gravacao sem protecao atomica | Facil de implementar, mas duas leituras veem livre e ambas podem gravar. | Viola RF-008/RN-005; inaceitavel. | Rejeitada. |
+| Bloqueio transacional por recurso | Ordena disputa e permite revalidar perto do commit | Dependente do motor; contenção, timeout e deadlock com vários recursos; mutex de processo não serve | Corridas reais com transações em Testcontainers e mesma chave de recurso |
+| Restrição temporal/exclusion do SGBD | Defesa no limite do armazenamento; dificulta bypass por outra escrita | Suporte/modelagem variam; estados bloqueantes e exceções devem estar representados | Testar constraint, adjacência e mapeamento de conflito por SGBD real |
+| Serializável/controle otimista e conflito/retry | Detecta atualização concorrente; paralelismo para períodos independentes conforme motor | Abortos, política de retry/idempotência e custo sob carga | Teste de concorrência e carga no motor escolhido |
+| Consulta e gravação sem guarda atômica | Nenhum benefício que compense | Rejeitada: aceita race condition e viola RF-008 | Não aplicável |
 
-## Proposta e decisao
-
-Requisito arquitetural proposto: a criacao/aprovacao deve ter um ponto de confirmacao atomico que revalida estados ocupantes e nao permite dois aceites conflitantes, e deve acoplar auditoria da transicao ao mesmo resultado confirmado. Implementar apenas um `if` de disponibilidade na aplicacao ou mutex local nao atende a invariante.
-
-Nao e possivel aprovar uma tecnica final antes de escolher persistencia e resolver DP-001/DP-017/DP-018. Recomenda-se selecionar entre restricao temporal e bloqueio/serializacao suportados pelo banco, possivelmente em defesa combinada, apos prova de integracao. ADR-004 fica **Pendente**; qualquer alternativa exige validacao de arquitetura e stakeholders, e evidencia real com Testcontainers. Nao se prescreve banco, ORM ou detalhe de isolamento.
-
-**Requisitos:** RF-006..RF-009, RF-016, RF-026, RF-030; RN-001..RN-007, RN-011, RN-016; RNF-004, RNF-005, RNF-007, RNF-011, RNF-013. **Pendencias:** DP-001, DP-004, DP-006, DP-014, DP-017, DP-018.
+O mecanismo físico é decisão técnica posterior, não uma regra de negócio. ADR-004 contém a proposta e os critérios de decisão; ADR-003 registra a dependência do SGBD. Nenhuma evidência acima foi executada.

@@ -21,7 +21,7 @@ As linhas ligam objetivos/necessidades de personas a jornadas, RF/RNF, regras e 
 | RF-003 | Todos: encerrar sessao | J-SOL-001, J-ADM-001 | RN-015 | RNF-001, 003 | Obrigatorio | CA-RF-003-01 | Contexto encerrado nao autoriza acao; teste pendente |
 | RF-004 | Solicitante: encontrar recursos rapidamente | J-SOL-002; J-ADM-002, 004-006 | RN-007, 008, 015 | RNF-001, 002, 003, 006, 009, 010 | Obrigatorio | CA-RF-004-01..03 | Filtros e erro distinto de vazio; teste pendente |
 | RF-005 | Todos: consultar caracteristicas e estado | J-SOL-002; J-RES-002, 006-007; J-ADM-004-006 | RN-008, 015 | RNF-001, 002, 003, 009 | Obrigatorio | CA-RF-005-01..02 | Detalhe de recurso desativado; teste pendente |
-| RF-006 | Todos: usar periodo valido e entender conflito | J-SOL-003-004, 006; J-RES-003, 005; J-ADM-007 | RN-001, 002 | RNF-003, 004, 005, 013 | Obrigatorio | CA-RF-006-01..03 | Periodo invalido, sobreposto e adjacente; teste pendente |
+| RF-006 | Todos: usar periodo valido e entender conflito | J-SOL-003-004, 006; J-RES-003, 005; J-ADM-007 | RN-001, 002 | RNF-003, 004, 005, 013 | Obrigatorio | CA-RF-006-01..03 | Regra temporal base na Story 1.1; 18 testes JUnit aprovados; integracao nos fluxos operacionais pendente |
 | RF-007 | Todos: evitar alocar recurso/professor indisponivel | J-SOL-003-004, 006; J-RES-002-003, 005; J-ADM-004-007 | RN-002-004, 006-008 | RNF-003-005, 008 | Obrigatorio | CA-RF-007-01..03 | Conflito, manutencao, professor e falha de consulta; teste pendente |
 | RF-008 | Solicitante/Responsavel: evitar dupla reserva | J-SOL-004, 006; J-RES-003; J-ADM-007 | RN-002, 004-006 | RNF-004, 005, 007, 013 | Obrigatorio | CA-RF-008-01..03 | Duas solicitacoes simultaneas; teste pendente |
 | RF-009 | Solicitante: pedir recurso e receber estado | J-SOL-004 | RN-001-009, 015 | RNF-001, 003-009 | Obrigatorio | CA-RF-009-01..04 | Pedido valido/invalido, manutencao e conflito; teste pendente |
@@ -115,60 +115,59 @@ Componentes arquiteturais, diagramas C4/UML, IDs de testes executaveis, resultad
 
 ## Rastreabilidade arquitetural
 
-Os nomes de componentes e diagramas referem-se a propostas ainda sujeitas a revisao. Coluna de teste registra o proximo cenario futuro, sem criar identificador de teste, resultado ou evidencia inexistente.
+Os componentes C4 e diagramas são propostas. Os cenários de teste abaixo são planos futuros; não são testes existentes nem resultados. As referências a RF/RN/RNF mantêm os identificadores originais.
 
-| Diagrama | Persona / jornada | RF / RNF / RN | Componentes C4 nivel 3 | ADR | Teste futuro / status |
+### Diagramas de sequência e casos de uso
+
+| Diagrama | Jornada(s) | Requisitos/regras principais | Componentes nível 3 | ADRs / questões abertas | Verificação futura (pendente) |
 |---|---|---|---|---|---|
-| SEQ-SOL-001 | Solicitante; J-SOL-001 | RF-001..003; RN-015/022; RNF-001..003 | Entrada, Identidade e Autorizacao, Interface Web | ADR-005/008 | Credencial/perfil/logout e acesso negado; pendente |
-| SEQ-SOL-002 | Solicitante; J-SOL-002 | RF-004/005/018; RN-003/007/008/015; RNF-001..003/006/009 | Catalogo, Disponibilidade, Consultas e Relatorios, Entrada | ADR-002/005/008 | Filtros, vazio, falha e agenda ausente; pendente |
-| SEQ-SOL-003 | Solicitante; J-SOL-003 | RF-006/007/018; RN-001..004/006/007; RNF-003..006/008 | Disponibilidade, Catalogo, Persistencia | ADR-002/003/004 | Invalido, conflito, adjacencia e manutencao; pendente |
-| SEQ-SOL-004 | Solicitante; J-SOL-004 | RF-006..010/030..033; RN-001..009/015..017/023; RNF-001/003..005/008/011 | Entrada, Identidade, Reservas, Disponibilidade, Auditoria, Comunicacao, Persistencia | ADR-004/005/006/007 | Pedido restrito/comum, conflito, falha atomica e notificacao; pendente |
-| SEQ-SOL-005 | Solicitante; J-SOL-006 | RF-002/006..008/013/030/032; RN-001..008/013/016/019; RNF-001/003..005/011 | Entrada, Identidade, Reservas, Disponibilidade, Auditoria, Persistencia | ADR-002/004/006 | Propriedade, conflito, estado obsoleto; pendente |
-| SEQ-SOL-006 | Solicitante; J-SOL-007 | RF-002/014/030/032/033; RN-013/016/019/023; RNF-001/003/005/008/011 | Entrada, Identidade, Reservas, Auditoria, Comunicacao | ADR-005/006/007/008 | Permitido, proibido, duplicado, falha auditavel; pendente |
-| SEQ-SOL-007 | Solicitante; J-SOL-005 | RF-002/011/012; RN-015/018/019; RNF-001..003/009/011 | Entrada, Identidade, Consultas e Relatorios, Auditoria | ADR-005/006/008 | Propriedade, filtro, vazio e falha; pendente |
-| SEQ-RES-001 | Responsavel; J-RES-001/002/008 | RF-002/005/015/021; RN-010/011/015; RNF-001..003/006/009 | Entrada, Identidade, Consultas e Relatorios, Disponibilidade | ADR-002/005/008 | Escopo, filtros e falha de leitura; pendente |
-| SEQ-RES-002 | Responsavel; J-RES-003 | RF-002/006..008/010/015/016/030/032/033; RN-001..012/016/023; RNF-001/003..005/008/011 | Entrada, Identidade, Aprovacao, Reservas, Disponibilidade, Persistencia, Auditoria, Comunicacao | ADR-004/005/006/007 | Aprovacao concorrente autorizada/negada e conflito; pendente |
-| SEQ-RES-003 | Responsavel; J-RES-004 | RF-002/017/030/032/033; RN-010..012/014/016/023; RNF-001..003/005/008/011 | Entrada, Identidade, Aprovacao, Reservas, Auditoria, Comunicacao | ADR-005/006/007/008 | Justificativa, escopo, duplicidade e falha externa; pendente |
-| SEQ-RES-004 | Responsavel; J-RES-005 | RF-002/006/007/018; RN-001..003/010/015; RNF-001..004/009 | Entrada, Identidade, Disponibilidade, Catalogo, Persistencia | ADR-002/005 | Docente ocupado/agenda ausente/adjacente; pendente |
-| SEQ-RES-005 | Responsavel; J-RES-006 | RF-002/019/021/030; RN-010/016/020; RNF-001/003/005/011 | Entrada, Identidade, Movimentacao, Reservas, Auditoria, Persistencia | ADR-002/006 | Reserva elegivel, fora de escopo e retirada duplicada; pendente |
-| SEQ-RES-006 | Responsavel; J-RES-007 | RF-002/020/021/030; RN-010/016/021; RNF-001/003/005/011 | Entrada, Identidade, Movimentacao, Reservas, Auditoria, Persistencia | ADR-002/006 | Sem retirada, devolucao duplicada e falha auditavel; pendente |
-| SEQ-RES-007 | Responsavel; J-RES-008 | RF-002/015/021/029; RN-010/015/020/021; RNF-001..003/006/009/011 | Entrada, Identidade, Consultas e Relatorios, Auditoria, Persistencia | ADR-002/005/006/008 | Pendencia sem prazo, escopo e falha; pendente |
-| SEQ-ADM-001 | Administrador; J-ADM-001 | RF-001..003; RN-015/022; RNF-001..003 | Entrada, Identidade e Autorizacao, Interface Web | ADR-005/008 | Perfil admin, solicitante negado e sessao encerrada; pendente |
-| SEQ-ADM-002 | Administrador; J-ADM-003 | RF-002/022/030; RN-015/017/022; RNF-001..005/011 | Entrada, Identidade, Administracao, Persistencia, Auditoria | ADR-002/005/006 | Permissao, conta ativa, impacto e falha de auditoria; pendente |
-| SEQ-ADM-003 | Administrador; J-ADM-004..006 | RF-002/004/005/023..025/030; RN-003/007/008/017/022; RNF-001..005/011 | Entrada, Identidade, Administracao, Catalogo, Auditoria, Persistencia | ADR-002/003/006 | Validacao, duplicidade, vinculos ativos e historico; pendente |
-| SEQ-ADM-004 | Administrador; J-ADM-007 | RF-002/006..008/026/030; RN-001/002/005/007/016/017; RNF-001/003..008/011 | Entrada, Identidade, Administracao, Disponibilidade, Persistencia, Auditoria | ADR-004/006 | Reserva existente, corrida manutencao/aceite; pendente |
-| SEQ-ADM-005 | Administrador; J-ADM-008 | RF-002/012/029/030; RN-015..018/022; RNF-001..003/011/012 | Entrada, Identidade, Consultas e Relatorios, Auditoria, Persistencia | ADR-005/006/008 | Filtros, leitura, negacao e falha; pendente |
-| SEQ-ADM-006 | Administrador; J-ADM-002/009 | RF-002/027/028/034..036; RN-004/007/012/024; RNF-001..003/006/008/009/012 | Entrada, Identidade, Consultas e Relatorios, Persistencia | ADR-002/008 | Agregacao definida, falha vs zero, fonte ausente; pendente |
-| SEQ-CRIT-001 | Solicitantes A/B e Responsavel; J-SOL-004/J-RES-003 | RF-006..009/016/026/030; RN-001..007/011/016; RNF-004/005/007/011/013 | Reservas, Disponibilidade, Persistencia, Auditoria, Entrada | ADR-003/004/006/009 | Teste concorrente com Testcontainers; IDs ainda nao criados |
+| SEQ-SOL-001 | J-SOL-001 | RF-001..003; RN-015, RN-022; RNF-001..003 | Entrada, Identidade e Autorização | ADR-005/008; DP-019 | Credencial, conta/perfil, logout e acesso direto |
+| SEQ-SOL-002 | J-SOL-002 | RF-004/005/018; RN-003/007/008/015; RNF-001..003/006/009 | Catálogo, Disponibilidade, Entrada | ADR-002/005/008; DP-016 | Filtros, vazio versus falha e agenda ausente |
+| SEQ-SOL-003 | J-SOL-003 | RF-006/007/018; RN-001..004/006/007; RNF-003..006/008 | Disponibilidade, Catálogo, Persistência | ADR-003/004; DP-001/015/016 | Intervalo inválido, sobreposição, adjacência e manutenção |
+| SEQ-SOL-004 | J-SOL-004 | RF-006..010/030..033; RN-001..009/015..017/023; RNF-001/003..005/008/011 | Entrada, Identidade, Reservas, Disponibilidade, Auditoria, Comunicação | ADR-004..008; DP-001/002/009/013 | Pedido restrito/comum, conflito, commit/auditoria, falha de comunicação |
+| SEQ-SOL-005 | J-SOL-006 | RF-002/006..008/013/030/032; RN-001..008/013/016/019; RNF-001/003..005/011 | Entrada, Identidade, Reservas, Disponibilidade, Auditoria | ADR-004..006; DP-007/013 | Propriedade, estado obsoleto, conflito e rollback |
+| SEQ-SOL-006 | J-SOL-007 | RF-002/014/030/032/033; RN-013/016/019/023; RNF-001/003/005/008/011 | Entrada, Identidade, Reservas, Auditoria, Comunicação | ADR-005..008; DP-007/009 | Cancelamento permitido/proibido/repetido e auditoria |
+| SEQ-SOL-007 | J-SOL-005 | RF-002/011/012; RN-015/018/019; RNF-001..003/009/011 | Entrada, Identidade, Consultas e Relatórios, Auditoria | ADR-005/006/008; DP-011 | Propriedade, filtros, vazio, falha e privacidade |
+| SEQ-RES-001 | J-RES-001/002/008 | RF-002/005/015/021; RN-010/011/015; RNF-001..003/006/009 | Entrada, Identidade, Consultas e Relatórios, Disponibilidade | ADR-002/005/008; DP-003 | Escopo, fila/detalhe, atualização e falha de leitura |
+| SEQ-RES-002 | J-RES-003 | RF-002/006..008/010/015/016/030/032/033; RN-001..012/016/023; RNF-001/003..005/008/011 | Entrada, Identidade, Decisão, Reservas, Disponibilidade, Persistência, Auditoria, Comunicação | ADR-004..008; DP-001/003/006 | Aprovação autorizada, corrida, estado obsoleto e auditoria |
+| SEQ-RES-003 | J-RES-004 | RF-002/017/030/032/033; RN-010..012/014/016/023; RNF-001..003/005/008/011 | Entrada, Identidade, Decisão, Reservas, Auditoria, Comunicação | ADR-005..008; DP-002/003/009 | Justificativa, escopo, decisão duplicada e falha de canal |
+| SEQ-RES-004 | J-RES-005 | RF-002/006/007/018; RN-001..003/010/015; RNF-001..004/009 | Entrada, Identidade, Disponibilidade, Catálogo | ADR-002/005/008; DP-003/016 | Docente ocupado/sem agenda/adjacente; não indicar disponibilidade por falha |
+| SEQ-RES-005 | J-RES-006 | RF-002/019/021/030; RN-010/016/020; RNF-001/003/005/011 | Entrada, Identidade, Movimentação, Reservas, Auditoria | ADR-002/006/008; DP-006/008 | Autorização, elegibilidade e duplicidade |
+| SEQ-RES-006 | J-RES-007 | RF-002/020/021/030; RN-010/016/021; RNF-001/003/005/011 | Entrada, Identidade, Movimentação, Reservas, Auditoria | ADR-002/006/008; DP-006/008 | Retirada aberta, devolução duplicada e falha auditável |
+| SEQ-RES-007 | J-RES-008 | RF-002/015/021/029; RN-010/015/020/021; RNF-001..003/006/009/011 | Entrada, Identidade, Consultas e Relatórios, Auditoria | ADR-005/006/008; DP-003/008/011 | Pendência sem prazo, isolamento de escopo e falha de consulta |
+| SEQ-ADM-001 | J-ADM-001 | RF-001..003; RN-015/022; RNF-001..003 | Entrada, Identidade e Autorização | ADR-005/008; DP-019 | Perfil, expiração/logout e usuário sem permissão |
+| SEQ-ADM-002 | J-ADM-003 | RF-002/022/030; RN-015/017/022; RNF-001..005/011 | Entrada, Identidade, Administração, Persistência, Auditoria | ADR-002/005/006; DP-003/005 | Alteração de acesso, bloqueio com reserva ativa e falha de auditoria |
+| SEQ-ADM-003 | J-ADM-004..006 | RF-002/004/005/023..025/030; RN-003/007/008/017/022; RNF-001..005/011 | Entrada, Identidade, Administração, Catálogo, Persistência, Auditoria | ADR-002/003/006; DP-005/016 | Cadastro/duplicidade, reserva/movimento vinculado e histórico |
+| SEQ-ADM-004 | J-ADM-007 | RF-002/006..008/026/030; RN-001/002/005/007/016/017; RNF-001/003..008/011 | Entrada, Identidade, Administração, Disponibilidade, Persistência, Auditoria | ADR-003/004/006; DP-004/017/018 | Reserva existente, manutenção contra aceite e efeito de commit |
+| SEQ-ADM-005 | J-ADM-008 | RF-002/012/029/030; RN-015..018/022; RNF-001..003/011/012 | Entrada, Identidade, Consultas e Relatórios, Auditoria | ADR-005/006/008; DP-011 | Acesso de leitura, filtro, minimização, falha e tentativa de mutação |
+| SEQ-ADM-006 | J-ADM-002/009 | RF-002/027/028/034..036; RN-004/007/012/024; RNF-001..003/006/008/009/012 | Entrada, Identidade, Consultas e Relatórios, Persistência | ADR-002/008; DP-010/014 | Fórmula aprovada, dado parcial/falha versus zero e origem |
+| SEQ-CRIT-001 | J-SOL-004/J-RES-003/J-ADM-007 | RF-006..009/013/016/026/030; RN-001..007/011/016; RNF-004/005/007/011/013 | Entrada, Identidade, Reservas, Decisão, Disponibilidade, Persistência, Auditoria | ADR-003/004/006/009; DP-001/004/006/017/018 | Testcontainers: pedido/pedido, aprovação/nova solicitação, manutenção/aceite; ainda não executado |
 
-## Rastreabilidade C4 e ADR
+### Rastreabilidade de requisitos funcionais para componentes
 
-| Artefato | Capacidade/requisitos | Evidencia e status |
-|---|---|---|
-| C4 nivel 1 | Personas e limite do sistema; RF-001..RF-036; RNF-001/002/008 | NIVEL_1_CONTEXTO.md; sistema externo de notificacao condicional; proposta |
-| C4 nivel 2 | Web, Back-end, persistencia e canal opcional; RNF-004/005/006/008/011 | NIVEL_2_CONTEINERES.md; banco/framework de interface pendentes |
-| C4 nivel 3 | Componentes de entrada, identidade, catalogo, disponibilidade, reservas, decisao, movimento, auditoria, comunicacao, consultas/persistencia | NIVEL_3_COMPONENTES.md; componentes conceituais, proposta |
-| Estados | RN-011..RN-014; RF-009/016/017/019/020 | ESTADOS_RESERVA.md; transicoes `EM_USO`, `CONCLUIDA` e cancelamento pendentes |
-| ADR-001..ADR-009 | Forma, modulos, persistencia, concorrencia, identidade, auditoria, integracao, erros e testes | `PRD/arquitetura/adr/`; status Proposta/Pendente, nenhum aprovado |
-| Riscos RA-001..RA-014 | RNF-001..RNF-014 e operacoes criticas | RISCOS_ARQUITETURAIS.md; mitigacoes propostas, sem evidencia executada |
-
-## Rastreabilidade RF para componentes e sequencias
-
-Cada requisito funcional pertence a pelo menos um componente proposto no C4 nivel 3. As sequencias listadas detalham os fluxos obrigatorios que exercitam a capacidade; requisicoes de consulta/admin sem sequencia exclusiva ficam cobertas pelo componente e pela sequencia de consulta/relatorio mais proxima, sem criar diagrama adicional implicitamente.
-
-| Componente C4 nivel 3 | RF associados | Sequencias que detalham a interacao | Estado |
+| Componente (C4 nível 3) | RF sob responsabilidade/co-responsabilidade | Diagramas que evidenciam os principais fluxos | Situação/pendências |
 |---|---|---|---|
-| Entrada da Aplicacao; Identidade e Autorizacao | RF-001, RF-002, RF-003 | SEQ-SOL-001, SEQ-RES-001, SEQ-ADM-001; autorizacao reaparece em todas as sequencias protegidas | Proposta C4; testes de acesso pendentes |
-| Catalogo de Recursos; Consultas e Relatorios | RF-004, RF-005, RF-011, RF-012, RF-015, RF-021, RF-027, RF-029 | SEQ-SOL-002, SEQ-SOL-007, SEQ-RES-001, SEQ-RES-007, SEQ-ADM-005, SEQ-ADM-006 | Proposta C4; consultas gerais usam componente compartilhado |
-| Disponibilidade e Integridade | RF-006, RF-007, RF-008, RF-018, RF-026 | SEQ-SOL-003, SEQ-SOL-004, SEQ-RES-002, SEQ-RES-004, SEQ-ADM-004, SEQ-CRIT-001 | Proposta; mecanismo final pendente ADR-004/DP-017/018 |
-| Reservas e Transicoes | RF-009, RF-011, RF-013, RF-014, RF-027 | SEQ-SOL-004, SEQ-SOL-005, SEQ-SOL-006, SEQ-SOL-007, SEQ-CRIT-001 | Proposta; estados elegiveis pendentes DP-001/006/007 |
-| Decisao de Aprovacao | RF-010, RF-015, RF-016, RF-017 | SEQ-RES-001, SEQ-RES-002, SEQ-RES-003, SEQ-CRIT-001 | Proposta; autorizacao/estado pendentes DP-001/003/006 |
-| Administracao de Cadastros; Catalogo de Recursos | RF-022, RF-023, RF-024, RF-025 | SEQ-ADM-002, SEQ-ADM-003 | Proposta; matriz e politicas cadastrais pendentes DP-003/005/016 |
-| Movimentacao | RF-019, RF-020, RF-021 | SEQ-RES-005, SEQ-RES-006, SEQ-RES-007 | Proposta; transicao vinculada pendente DP-006/008 |
-| Auditoria | RF-012, RF-016, RF-017, RF-019, RF-020, RF-029, RF-030 | SEQ-SOL-004..006, SEQ-RES-002..006, SEQ-ADM-002..005, SEQ-CRIT-001 | Proposta; atomicidade/retencao ADR-006/DP-011 |
-| Comunicacao | RF-031, RF-032, RF-033 | SEQ-SOL-004..006, SEQ-RES-002, SEQ-RES-003 | Adaptador condicional; canal pendente DP-009 |
-| Consultas e Relatorios | RF-028, RF-034, RF-035, RF-036 | SEQ-ADM-006; dashboard e filtros consultivos em SEQ-RES-001/007 | Proposta; definicoes metricas pendentes DP-010 |
+| Entrada da Aplicação | RF-001..RF-036 (fronteira transversal) | Todas as sequências | Contrato e protocolo ainda não selecionados |
+| Identidade e Autorização | RF-001..RF-003; RF-002 transversal em RF-004..RF-036 | Todas as sequências protegidas | DP-003/019; autorização sempre no servidor |
+| Catálogo de Recursos | RF-004, RF-005, RF-018, RF-023..RF-025 | SEQ-SOL-002, SEQ-SOL-003, SEQ-RES-004, SEQ-ADM-003 | DP-005/016 |
+| Administração de Cadastros | RF-022..RF-026 | SEQ-ADM-002..004 | DP-003/004/005 |
+| Disponibilidade e Integridade | RF-006..RF-008, RF-013, RF-016, RF-018, RF-026 | SEQ-SOL-003..005, SEQ-RES-002/004, SEQ-ADM-004, SEQ-CRIT-001 | Mecanismo DP-017/018; estados DP-001 |
+| Reservas e Transições | RF-009..RF-014, RF-016..RF-017 | SEQ-SOL-004..007, SEQ-RES-002/003, SEQ-CRIT-001 | Transições DP-001/006/007 |
+| Decisão de Aprovação | RF-010, RF-015..RF-017 | SEQ-RES-001..003, SEQ-CRIT-001 | Escopo e critérios DP-002/003/006 |
+| Movimentação | RF-019..RF-021 | SEQ-RES-005..007 | DP-006/008 |
+| Auditoria | RF-012, RF-016/017, RF-019/020, RF-022..RF-026, RF-029/030 | SEQ-SOL-004..007, SEQ-RES-002/003/005/006, SEQ-ADM-002..005, SEQ-CRIT-001 | Atomicidade ADR-006; retenção DP-011 |
+| Comunicação | RF-031..RF-033 | SEQ-SOL-004/006, SEQ-RES-002/003 | Adaptador interno; integração externa não presumida (DP-009) |
+| Consultas e Relatórios | RF-011/012, RF-015, RF-021, RF-027..RF-029, RF-034..RF-036 | SEQ-SOL-007, SEQ-RES-001/007, SEQ-ADM-005/006 | Definições DP-010/011 |
 
-**C4 nivel 1/2:** todos os RF pertencem ao contêiner proposto Aplicacao Back-end; os fluxos de usuario atravessam Aplicacao Web, e dados persistentes passam pela Persistencia Transacional. Essas sao fronteiras propostas, nao mapeamentos de deploy aprovados.
+### C4, estados e decisões
 
-**Testes:** cenarios documentais estao associados; IDs, execucoes, resultados, defeitos e evidencias automatizadas continuam **PENDENTES**. Componentes sao propostas C4 e nao autorizam iniciar codigo ate validacao arquitetural e resolucao das decisoes bloqueantes.
+| Artefato | Requisitos/capacidades | Status documental |
+|---|---|---|
+| C4 nível 1 | Contexto dos três perfis e limite do sistema | Proposta; nenhuma integração externa confirmada |
+| C4 nível 2 | Aplicação Web, Aplicação e persistência transacional | Proposta monólito modular; framework Web, SGBD e ORM em aberto |
+| C4 nível 3 | Componentes da aplicação e contratos lógicos | Componentes internos, não contêineres implantáveis |
+| Estados da reserva | RN-004, RN-011..RN-014; RF-009/010/016/017/019/020 | Parcial; DP-001/006/007 continuam bloqueando transições/efeitos |
+| ADR-001..ADR-009 | Organização, módulos, persistência, concorrência, segurança, auditoria, comunicação, erros e testes | Propostas/recomendações; nenhum sign-off formal ou execução registrados |
+| RA-001..RA-014 | Riscos transversais e mitigação proposta | Avaliação documental; nenhuma mitigação implementada ou testada |
+
+**Testes e evidências:** cenários seguem pendentes; não há IDs de teste, resultados, defeitos ou cobertura para registrar. Os caminhos C4/UML/ADR referidos nesta RTM descrevem propostas, não implementação. Os IDs RF/RNF/RN e CA existentes não foram alterados.

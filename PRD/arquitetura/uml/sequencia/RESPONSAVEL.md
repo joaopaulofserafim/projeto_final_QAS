@@ -9,7 +9,7 @@ Participantes correspondem aos componentes de [C4 nivel 3](../../c4/NIVEL_3_COMP
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-001 — Consulta de solicitacoes pendentes
+    %% SEQ-RES-001 — Consulta de solicitacoes pendentes
     actor Res as Responsavel
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -47,7 +47,7 @@ sequenceDiagram
         Persistencia-->>Relatorios: Falha
         Relatorios-->>Entrada: Erro de consulta
         Entrada-->>Web: Falha
-        Web-->>Res: Preserva filtros; nao apresenta fila vazia como resultado
+        Web-->>Res: Preserva filtros. Nao apresenta fila vazia como resultado
     end
 ```
 
@@ -60,7 +60,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-002 — Aprovacao de reserva restrita
+    %% SEQ-RES-002 — Aprovacao de reserva restrita
     actor Res as Responsavel
     actor Sol as Solicitante (destinatario)
     participant Web as Aplicacao Web
@@ -85,12 +85,12 @@ sequenceDiagram
     Disp->>Persistencia: Ler ocupacao atual
     Persistencia-->>Disp: Reservas, bloqueios e alocacoes vigentes
     alt Sem permissao, nao restrita ou nao esta SOLICITADA
-        Decisao-->>Entrada: Negar decisao; estado intacto
+        Decisao-->>Entrada: Negar decisao. Estado intacto
         Entrada-->>Web: Acesso/estado atualizado
         Web-->>Res: Explica impedimento
     else Conflito ou manutencao apareceu durante espera
         Disp-->>Decisao: Indisponivel
-        Decisao-->>Entrada: Nao aprovar; destino da solicitacao depende DP-006
+        Decisao-->>Entrada: Nao aprovar. Destino da solicitacao depende DP-006
         Entrada-->>Web: Conflito atual
         Web-->>Res: Informa que pedido nao foi aprovado
         Web-->>Sol: Informa indisponibilidade conforme politica de comunicacao
@@ -126,7 +126,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-003 — Rejeicao de solicitacao
+    %% SEQ-RES-003 — Rejeicao de solicitacao
     actor Res as Responsavel
     actor Sol as Solicitante
     participant Web as Aplicacao Web
@@ -147,7 +147,7 @@ sequenceDiagram
     Reservas->>Persistencia: Consultar estado da solicitacao
     Persistencia-->>Reservas: Estado atual
     alt Fora de escopo, estado resolvido ou justificativa invalida conforme regra
-        Decisao-->>Entrada: Negar; nao alterar estado
+        Decisao-->>Entrada: Negar. Nao alterar estado
         Entrada-->>Web: Motivo/estado atual
         Web-->>Res: Informa que rejeicao nao ocorreu
     else SOLICITADA e justificativa aceita
@@ -160,7 +160,7 @@ sequenceDiagram
         Entrada-->>Web: Atualiza fila
         Web-->>Res: Confirma rejeicao
         Decisao->>Comunicacao: Solicita aviso pos-confirmacao
-        Comunicacao-->>Sol: Estado e motivo autorizado; falha nao reverte decisao
+        Comunicacao-->>Sol: Estado e motivo autorizado. Falha nao reverte decisao
     end
 ```
 
@@ -173,7 +173,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-004 — Validacao de alocacao de professores
+    %% SEQ-RES-004 — Validacao de alocacao de professores
     actor Res as Responsavel
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -200,7 +200,7 @@ sequenceDiagram
         else Alocacao sobreposta
             Disp-->>Entrada: Conflito docente
             Entrada-->>Web: Ocupado
-            Web-->>Res: Mostra conflito; nao aprova
+            Web-->>Res: Mostra conflito. Nao aprova
         else Agenda sem conflito conhecido
             Disp-->>Entrada: Sem sobreposicao na fonte consultada
             Entrada-->>Web: Resultado informativo
@@ -222,7 +222,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-005 — Retirada de material
+    %% SEQ-RES-005 — Retirada de material
     actor Res as Responsavel
     actor Recebedor as Pessoa que recebe
     participant Web as Aplicacao Web
@@ -247,7 +247,7 @@ sequenceDiagram
         Movimento->>Persistencia: Registrar operador, recebedor, recurso e instante real
         Persistencia->>Auditoria: Registrar movimento e ator/instante/alvo
         Persistencia-->>Movimento: Registro confirmado
-        Movimento-->>Entrada: Retirada registrada; estado da reserva inalterado se transicao nao definida
+        Movimento-->>Entrada: Retirada registrada. Estado da reserva inalterado se transicao nao definida
         Entrada-->>Web: Confirmacao
         Web-->>Res: Exibe movimento no historico
         Web-->>Recebedor: Apresenta confirmacao do recebimento conforme processo
@@ -263,7 +263,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-006 — Devolucao de material
+    %% SEQ-RES-006 — Devolucao de material
     actor Res as Responsavel
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -302,7 +302,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    title SEQ-RES-007 — Consulta de pendencias
+    %% SEQ-RES-007 — Consulta de pendencias
     actor Res as Responsavel
     participant Web as Aplicacao Web
     participant Entrada as Entrada da Aplicacao
@@ -317,7 +317,7 @@ sequenceDiagram
     Entrada->>Relatorios: Consultar solicitacoes pendentes e movimentos abertos
     Relatorios->>Persistencia: Ler estados e retiradas/devolucoes
     Persistencia-->>Relatorios: Registros autorizados
-    Relatorios->>Relatorios: Classificar pendencias; atraso somente com prazo definido
+    Relatorios->>Relatorios: Classificar pendencias. Atraso somente com prazo definido
     alt Ha itens
         Relatorios-->>Entrada: Fila agrupada por tipo e estado
         Entrada-->>Web: Resultado atual
