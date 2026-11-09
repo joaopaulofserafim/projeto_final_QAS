@@ -1,0 +1,43 @@
+schema: 1
+story: "1.1"
+story_title: "Validar períodos de reserva e identificar sobreposição de horários"
+gate: CONCERNS
+status_reason: "Domínio correto e bem testado (AC1–AC9 atendidos); desvios de processo: merge na main antes do gate, TDD sem evidência no git e meta de cobertura não aplicada."
+reviewer: "Claude Code atuando como @qa (Quinn)"
+updated: "2026-11-09"
+reviewed_revision: "commit:556e193372734a3bb1ccc0b969523d792daf1466"
+evidence:
+  build: "mvn -B clean verify em main@556e193 — 19 testes, 0 falhas, Java 21.0.12.1"
+  coverage: "PeriodoReserva: 8/8 linhas, 6/6 branches"
+top_issues:
+  - id: "PROC-001"
+    severity: medium
+    category: process
+    finding: "Código mergeado na main pelo PR #1 sem revisão e sem CI, com a story em InProgress."
+    suggested_action: "Story 1.2: workflow de CI em todo PR e proteção da main (1 aprovação + check verde)."
+  - id: "TEST-001"
+    severity: medium
+    category: tests
+    finding: "RED/GREEN registrados apenas no Debug Log; o git tem um único commit com testes e código."
+    suggested_action: "Demonstrar TDD com commits test(RED) → feat(GREEN) → refactor na story 1.5."
+  - id: "CFG-001"
+    severity: medium
+    category: tests
+    finding: "AC9 dizia não haver meta de cobertura aprovada, mas o enunciado define 80% linhas e 70% branches."
+    suggested_action: "Story 1.2: jacoco:check com 0.80/0.70."
+  - id: "DOC-001"
+    severity: low
+    category: docs
+    finding: "Seções de planejamento afirmavam que não havia testes."
+    suggested_action: "Notas de reconciliação adicionadas pela @po."
+  - id: "CODE-001"
+    severity: low
+    category: code
+    finding: "Mensagens de exceção em inglês em PeriodoReserva."
+    suggested_action: "Traduzir na camada de aplicação (Periodos), sem alterar o domínio."
+nfr_validation:
+  security: { status: PASS, notes: "Domínio puro, sem entrada externa." }
+  performance: { status: PASS, notes: "Comparação O(1)." }
+  reliability: { status: PASS, notes: "Imutável; rejeita nulos." }
+  maintainability: { status: PASS, notes: "Record com 20 linhas e testes parametrizados." }
+waiver: { active: false }
