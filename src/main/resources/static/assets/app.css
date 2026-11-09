@@ -1,0 +1,9 @@
+/* Ajustes mínimos sobre o Bootstrap: legibilidade e toque em telas pequenas. */
+body { background: #f6f7f9; }
+.table td, .table th { white-space: nowrap; }
+.table td.quebra { white-space: normal; min-width: 12rem; }
+.nav-pills .nav-link { white-space: nowrap; }
+.btn { min-height: 2.25rem; }
+.badge-estado { font-size: .8rem; }
+.cartao-indicador .valor { font-size: 1.6rem; font-weight: 600; }
+#mensagem ul { margin: .25rem 0 0; }
