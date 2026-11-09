@@ -1,0 +1,35 @@
+# Uso:
+#   docker compose up -d banco          -> só o PostgreSQL (desenvolvimento com ./mvnw spring-boot:run)
+#   ./mvnw -DskipTests package && docker compose --profile app up -d --build   -> banco + aplicação
+services:
+  banco:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sor
+      POSTGRES_USER: sor
+      POSTGRES_PASSWORD: sor
+    ports:
+      - "5432:5432"
+    volumes:
+      - dados-sor:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sor -d sor"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    profiles: ["app"]
+    build: .
+    depends_on:
+      banco:
+        condition: service_healthy
+    environment:
+      SOR_DB_URL: jdbc:postgresql://banco:5432/sor
+      SOR_DB_USER: sor
+      SOR_DB_PASSWORD: sor
+    ports:
+      - "8080:8080"
+
+volumes:
+  dados-sor:
