@@ -3,4 +3,5 @@
 Integrantes: 
 Diego Sarti Araujo Viana;
 Lucas Soares Valerio dos Santos;
-João Paulo Figueiredo Serafim.
+João Paulo Figueiredo Serafim;
+João Victor Furin Lamas.
