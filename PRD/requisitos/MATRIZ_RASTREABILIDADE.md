@@ -1,5 +1,7 @@
 # Matriz de Rastreabilidade — RTM
 
+> **Atualização de 09/11/2026:** esta matriz liga persona → jornada → requisito → critério de aceite. A implementação, os **testes automatizados, os riscos e as evidências** de cada requisito estão em [`RTM.md`](../../RTM.md), na raiz do repositório. As frases abaixo que dizem "teste pendente" ou "não há IDs de teste" descrevem a situação de 26/10/2026 e foram superadas pela RTM.
+
 ## Como ler
 
 As linhas ligam objetivos/necessidades de personas a jornadas, RF/RNF, regras e criterios de aceite. Codigos `CA-*` referem-se a criterios documentados em `REQUISITOS_FUNCIONAIS.md` e `V-RNF-*` a verificacoes documentadas em `REQUISITOS_NAO_FUNCIONAIS.md`; nao sao IDs de testes. **Teste futuro: Pendente** significa que nenhum teste foi criado nesta etapa. Componentes C4, diagramas de sequencia, IDs/resultados de teste, defeitos, implementacao e evidencias executadas permanecem sem referencia ate existirem.
