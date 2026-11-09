@@ -1,0 +1,17 @@
+schema: 1
+story: "1.4"
+gate: PASS
+status_reason: "AC1–AC5 cobertos por RecursoApiTest (17, com 8 filtros e 3 validações parametrizadas), ErrosApiTest (6), PeriodosTest (7) e AuditoriaApiTest (4)."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:91caa3b"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "PERF-141"
+    severity: low
+    category: performance
+    finding: "Pesquisa de recursos sem paginação."
+    suggested_action: "Aceitável para o volume do catálogo; paginar se crescer."
+waiver: { active: false }

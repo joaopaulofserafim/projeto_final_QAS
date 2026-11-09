@@ -1,0 +1,22 @@
+schema: 1
+story: "1.2"
+gate: CONCERNS
+status_reason: "Pipeline e gate de cobertura funcionando (runs verdes; RED vermelho de propósito). SonarCloud ainda não executado e proteção da main não configurada: ambos dependem de ação manual do dono do repositório."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:b4e8ab2"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "PROC-121"
+    severity: medium
+    category: process
+    finding: "SonarCloud sem SONAR_TOKEN: meta '0 bugs/vulnerabilidades críticas' ainda sem evidência."
+    suggested_action: "Criar projeto no SonarCloud e o segredo SONAR_TOKEN (README, seção 6)."
+  - id: "PROC-122"
+    severity: medium
+    category: process
+    finding: "Branch main sem proteção (DEF-001)."
+    suggested_action: "Exigir PR com 1 aprovação e check verde."
+waiver: { active: false }

@@ -1,0 +1,22 @@
+schema: 1
+story: "1.3"
+gate: PASS
+status_reason: "AC1–AC6 cobertos por SegurancaApiTest (36), UsuarioApiTest (6), ApiExceptionHandlerTest (5) e ViolacaoExclusaoTest (2), todos verdes com PostgreSQL real."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:0404312"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "SECU-131"
+    severity: low
+    category: security
+    finding: "Login isento de CSRF (risco de login CSRF, baixo) e senha de demonstração na migração V2."
+    suggested_action: "Documentado no README; trocar senhas em implantação real."
+  - id: "PERF-132"
+    severity: low
+    category: performance
+    finding: "HTTP Basic verifica BCrypt a cada requisição (~80 ms)."
+    suggested_action: "Interface usa sessão; clientes de API intensivos devem usar sessão."
+waiver: { active: false }

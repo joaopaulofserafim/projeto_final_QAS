@@ -1,0 +1,17 @@
+schema: 1
+story: "1.7"
+gate: PASS
+status_reason: "AC1–AC6 cobertos por ManutencaoApiTest (6, com concorrência manutenção × reservas) e MovimentacaoApiTest (6)."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:52c22d8"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "REQU-171"
+    severity: low
+    category: requirements
+    finding: "Retirada não tem janela de horário (critério do Responsável)."
+    suggested_action: "Avaliar regra de antecedência com o PO."
+waiver: { active: false }

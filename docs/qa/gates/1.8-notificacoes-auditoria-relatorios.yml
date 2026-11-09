@@ -1,0 +1,22 @@
+schema: 1
+story: "1.8"
+gate: CONCERNS
+status_reason: "AC1–AC6 cobertos (NotificacaoWireMockTest com 2xx/500/timeout, RelatorioApiTest, CalculadoraHorasTest). DEF-009 encontrado e corrigido pelo WireMock."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:ec1d4f8"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "PERF-181"
+    severity: medium
+    category: performance
+    finding: "Envio da notificação é síncrono após o commit: com o provedor lento, a resposta da reserva espera até o timeout (2 s), embora a reserva já esteja gravada."
+    suggested_action: "Tornar o envio assíncrono (@Async) mantendo o registro FALHA."
+  - id: "RELI-182"
+    severity: low
+    category: reliability
+    finding: "Notificação com falha não é reenviada."
+    suggested_action: "Reprocessamento periódico das notificações FALHA."
+waiver: { active: false }
