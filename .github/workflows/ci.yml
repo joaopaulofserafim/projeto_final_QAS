@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build, testes e cobertura
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_OBRIGATORIO: "true"
+      # Opcional: sem o segredo SONAR_TOKEN o passo do SonarCloud é pulado (o restante do pipeline roda normalmente).
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # histórico completo para o SonarCloud
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Compilar
+        run: ./mvnw -B -ntp test-compile
+
+      - name: Instalar navegador para os testes E2E (Playwright)
+        if: hashFiles('src/test/java/br/edu/sor/e2e/**/*.java') != ''
+        run: ./mvnw -B -ntp exec:java -Dexec.classpathScope=test -Dexec.mainClass=com.microsoft.playwright.CLI -Dexec.args="install --with-deps chromium"
+
+      - name: Testes (unitários, integração com Testcontainers, API, concorrência, WireMock, E2E) + gate de cobertura
+        run: ./mvnw -B -ntp verify
+
+      - name: Publicar relatórios de teste e cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-de-qualidade
+          path: |
+            target/surefire-reports/
+            target/site/jacoco/
+          retention-days: 30
+
+      - name: Resumo da cobertura
+        if: always()
+        run: |
+          if [ -f target/site/jacoco/jacoco.csv ]; then
+            awk -F, 'NR>1 {lm+=$8; lc+=$9; bm+=$6; bc+=$7} END {
+              printf "### Cobertura JaCoCo\n\n| Métrica | Valor | Meta |\n|---|---|---|\n| Linhas | %.1f%% | 80%% |\n| Branches | %.1f%% | 70%% |\n",
+              100*lc/(lm+lc), 100*bc/(bm+bc) }' target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Análise SonarCloud
+        if: ${{ env.SONAR_TOKEN != '' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./mvnw -B -ntp sonar:sonar
