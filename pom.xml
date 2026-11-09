@@ -214,7 +214,6 @@
         <profile>
             <id>carga</id>
             <properties>
-                <skipTests>true</skipTests>
                 <jacoco.skip>true</jacoco.skip>
                 <sor.carga.host>localhost</sor.carga.host>
                 <sor.carga.porta>8080</sor.carga.porta>
@@ -224,6 +223,14 @@
             </properties>
             <build>
                 <plugins>
+                    <!-- No perfil de carga só o JMeter roda (o plugin do JMeter obedece a skipTests, por isso não usá-la) -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
                     <plugin>
                         <groupId>com.lazerycode.jmeter</groupId>
                         <artifactId>jmeter-maven-plugin</artifactId>
