@@ -150,6 +150,6 @@ Teste de carga (com a aplicação rodando a partir de uma cópia do JAR):
 
 ## 6. Ações manuais pendentes (dono do repositório)
 
-1. **SonarCloud:** criar a organização `joaopaulofserafim` e o projeto `joaopaulofserafim_projeto_final_qas` em sonarcloud.io (importando o repositório) e salvar o token como segredo `SONAR_TOKEN` em *Settings → Secrets and variables → Actions*. O pipeline passa a enviar a análise automaticamente. Se a organização/chave forem diferentes, ajuste `sonar.organization` e `sonar.projectKey` no `pom.xml`.
+1. **SonarCloud:** criar a organização `joaopaulofserafim` e o projeto `joaopaulofserafim_projeto_final_QAS` em sonarcloud.io (importando o repositório) e salvar o token como segredo `SONAR_TOKEN` em *Settings → Secrets and variables → Actions*. O pipeline passa a enviar a análise automaticamente. Se a organização/chave forem diferentes, ajuste `sonar.organization` e `sonar.projectKey` no `pom.xml`.
 2. **Proteção da `main`:** em *Settings → Branches*, exigir pull request com 1 aprovação e o check `Build, testes e cobertura` verde.
 3. **Revisão por pares:** abrir o PR de `feat/epic-1-mvp` para `main` e obter a revisão de um colega de equipe antes do merge.

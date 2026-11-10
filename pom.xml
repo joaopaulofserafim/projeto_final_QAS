@@ -33,7 +33,7 @@
 
         <!-- SonarCloud: analisa apenas o código do projeto (o framework AIOX versionado fica fora) -->
         <sonar.organization>joaopaulofserafim</sonar.organization>
-        <sonar.projectKey>joaopaulofserafim_projeto_final_qas</sonar.projectKey>
+        <sonar.projectKey>joaopaulofserafim_projeto_final_QAS</sonar.projectKey>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
         <sonar.sources>src/main</sonar.sources>
         <sonar.tests>src/test</sonar.tests>
