@@ -1,12 +1,12 @@
 /*
- * Interface do Sistema de Organização de Recursos.
+ * Interface do Portal de Recursos.
  * Sem framework: chama a API REST (/api/v1) com a sessão do navegador e o token CSRF (cookie XSRF-TOKEN).
- * Todo texto vindo da API é escapado antes de ir para o HTML.
+ * Todo texto vindo da API é escapado antes de ir para o HTML (sem XSS) e nada usa script inline (CSP).
  */
 (function () {
   'use strict';
 
-  const estado = { usuario: null, selecionados: new Set() };
+  const estado = { usuario: null, selecionados: new Set(), vistos: new Map(), temporizador: null };
   const $ = (seletor) => document.querySelector(seletor);
 
   // ------------------------------------------------------------------ utilidades
@@ -22,6 +22,8 @@
     return par ? decodeURIComponent(par.substring(nome.length + 1)) : null;
   }
 
+  const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
   function dataHora(iso) {
     if (!iso) return '';
     const [data, hora] = iso.split('T');
@@ -32,6 +34,10 @@
   function paraApi(valorInput) {
     if (!valorInput) return null;
     return valorInput.length === 16 ? valorInput + ':00' : valorInput;
+  }
+
+  function icone(nome) {
+    return `<svg class="ic"><use href="#i-${nome}"/></svg>`;
   }
 
   class ErroApi extends Error {
@@ -58,15 +64,16 @@
     return dados;
   }
 
-  // ------------------------------------------------------------------ mensagens
+  // ------------------------------------------------------------------ avisos
 
   function mostrar(tipo, titulo, detalhe, itens) {
     const caixa = $('#mensagem');
     const lista = (itens || []).map((i) => `<li>${esc(i)}</li>`).join('');
-    caixa.className = `alert alert-${tipo}`;
+    caixa.className = `toast-sor alert-${tipo}`;
     caixa.setAttribute('role', tipo === 'danger' ? 'alert' : 'status');
     caixa.innerHTML = `<strong>${esc(titulo)}</strong> ${esc(detalhe || '')}${lista ? `<ul>${lista}</ul>` : ''}`;
-    caixa.scrollIntoView({ block: 'nearest' });
+    clearTimeout(estado.temporizador);
+    estado.temporizador = setTimeout(() => { caixa.className = 'd-none'; }, 9000);
   }
 
   function sucesso(texto) {
@@ -98,25 +105,32 @@
     }
   }
 
+  const vazio = (texto) =>
+    `<div class="vazio">${icone('vazio').replace('class="ic"', 'class="ic ic-xl"')}<p>${texto}</p></div>`;
+
   // ------------------------------------------------------------------ sessão
 
   function telaLogin() {
     estado.usuario = null;
     $('#tela-app').classList.add('d-none');
-    $('#sessao').classList.add('d-none');
     $('#tela-login').classList.remove('d-none');
   }
 
+  const PERFIS = { SOLICITANTE: 'Solicitante', RESPONSAVEL: 'Responsável', ADMINISTRADOR: 'Administrador' };
+
   function telaApp(usuario) {
     estado.usuario = usuario;
-    $('#usuario-atual').textContent = `${usuario.nome} (${usuario.perfil.toLowerCase()})`;
+    $('#usuario-atual').textContent = usuario.nome;
+    $('#perfil-atual').textContent = PERFIS[usuario.perfil] || usuario.perfil;
+    $('#avatar').textContent = usuario.nome.trim().charAt(0).toUpperCase();
+    $('#saudacao').textContent = `Olá, ${usuario.nome.trim().split(/\s+/)[0]}`;
     $('#tela-login').classList.add('d-none');
-    $('#sessao').classList.remove('d-none');
     $('#tela-app').classList.remove('d-none');
     document.querySelectorAll('[data-perfis]').forEach((el) => {
       const permitido = el.dataset.perfis.split(',').includes(usuario.perfil);
-      (el.closest('li.nav-item') || el).classList.toggle('d-none', !permitido);
+      (el.closest('li') || el).classList.toggle('d-none', !permitido);
     });
+    sugerirPeriodo();
     abrirAba('reservar');
   }
 
@@ -149,11 +163,17 @@
 
   $('#botao-sair').addEventListener('click', () => executar(async () => {
     await api('POST', '/api/v1/auth/logout');
+    estado.selecionados.clear();
     telaLogin();
     sucesso('Sessão encerrada.');
   }));
 
   // ------------------------------------------------------------------ abas
+
+  const TITULOS = {
+    reservar: 'Reservar', minhas: 'Minhas reservas', aprovacoes: 'Aprovações e uso',
+    movimentacoes: 'Retiradas e devoluções', admin: 'Administração', notificacoes: 'Avisos'
+  };
 
   const carregadores = {
     reservar: () => Promise.resolve(),
@@ -165,12 +185,13 @@
   };
 
   function abrirAba(nome) {
-    document.querySelectorAll('#abas .nav-link').forEach((b) => {
+    document.querySelectorAll('#abas .menu-item').forEach((b) => {
       const ativa = b.dataset.aba === nome;
-      b.classList.toggle('active', ativa);
-      b.setAttribute('aria-current', ativa ? 'page' : 'false');
+      b.classList.toggle('ativo', ativa);
+      if (ativa) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     document.querySelectorAll('.aba').forEach((s) => s.classList.toggle('d-none', s.id !== `aba-${nome}`));
+    $('#titulo-pagina').textContent = TITULOS[nome];
     executar(carregadores[nome]);
   }
 
@@ -180,30 +201,102 @@
   });
 
   const nomesEstado = {
-    SOLICITADA: ['Aguardando aprovação', 'warning'], APROVADA: ['Aprovada', 'success'], EM_USO: ['Em uso', 'primary'],
-    CONCLUIDA: ['Concluída', 'secondary'], REJEITADA: ['Rejeitada', 'danger'], CANCELADA: ['Cancelada', 'dark'],
-    NAO_COMPARECEU: ['Não compareceu', 'danger']
+    SOLICITADA: 'Aguardando aprovação', APROVADA: 'Aprovada', EM_USO: 'Em uso', CONCLUIDA: 'Concluída',
+    REJEITADA: 'Rejeitada', CANCELADA: 'Cancelada', NAO_COMPARECEU: 'Não compareceu'
   };
 
-  function selo(estadoReserva) {
-    const [texto, cor] = nomesEstado[estadoReserva] || [estadoReserva, 'light'];
-    return `<span class="badge text-bg-${cor} badge-estado" data-estado="${esc(estadoReserva)}">${esc(texto)}</span>`;
-  }
-
-  const periodo = (r) => `${dataHora(r.inicio)} – ${dataHora(r.fim).substring(11)}`;
+  const selo = (e) => `<span class="selo selo-${esc(e)}" data-estado="${esc(e)}">${esc(nomesEstado[e] || e)}</span>`;
+  const horario = (r) => `${dataHora(r.inicio).substring(11)} – ${dataHora(r.fim).substring(11)}`;
   const listaRecursos = (r) => r.recursos.map((x) => esc(x.codigo)).join(', ');
 
-  // ------------------------------------------------------------------ recursos e reservas
+  /** Cartão de reserva com a "folha de calendário" (mês em âmbar). */
+  function cartaoReserva(r, extras) {
+    const [, mes, dia] = r.inicio.split('T')[0].split('-');
+    return `<div class="reserva-card" data-reserva="${r.id}">
+      <div class="rv-data"><small>${MESES[Number(mes) - 1]}</small><b>${Number(dia)}</b></div>
+      <div class="rv-corpo">
+        <h3>${esc(r.finalidade)}</h3>
+        <div class="rv-linha">
+          <span>${icone('relogio')}${esc(horario(r))}</span>
+          <span>${icone('sala')}${listaRecursos(r)}</span>
+          <span>${icone('professor')}${esc(r.solicitante.nome)}</span>
+          <span>Nº ${r.id}</span>
+        </div>
+      </div>
+      <div class="rv-acoes">${selo(r.estado)}${extras.acoes || ''}</div>
+      ${extras.decisao || ''}
+    </div>`;
+  }
+
+  // ------------------------------------------------------------------ reservar
+
+  const ROTULO_TIPO = { SALA: 'Sala', PROFESSOR: 'Professor', MATERIAL: 'Material', EQUIPAMENTO: 'Equipamento' };
+
+  function doisDigitos(n) { return String(n).padStart(2, '0'); }
+
+  function amanha(hora) {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return `${d.getFullYear()}-${doisDigitos(d.getMonth() + 1)}-${doisDigitos(d.getDate())}T${doisDigitos(hora)}:00`;
+  }
+
+  function sugerirPeriodo() {
+    if (!$('#busca-inicio').value) {
+      $('#busca-inicio').value = amanha(10);
+      $('#busca-fim').value = amanha(12);
+    }
+    resumirPeriodo();
+  }
+
+  $('#aba-reservar').addEventListener('click', (evento) => {
+    const botao = evento.target.closest('[data-preset]');
+    if (!botao) return;
+    const [de, ate] = botao.dataset.preset === 'manha' ? [8, 12] : [14, 18];
+    $('#busca-inicio').value = amanha(de);
+    $('#busca-fim').value = amanha(ate);
+    resumirPeriodo();
+  });
+
+  function resumirPeriodo() {
+    const inicio = paraApi($('#busca-inicio').value);
+    const fim = paraApi($('#busca-fim').value);
+    $('#resumo-periodo').textContent = inicio && fim
+      ? `${dataHora(inicio).substring(0, 10)} · ${dataHora(inicio).substring(11)} às ${dataHora(fim).substring(11)}`
+      : 'Informe o início e o término na busca.';
+  }
+  $('#busca-inicio').addEventListener('change', resumirPeriodo);
+  $('#busca-fim').addEventListener('change', resumirPeriodo);
 
   $('#form-busca').addEventListener('submit', (evento) => {
     evento.preventDefault();
     executar(pesquisar);
   });
 
+  function cartaoRecurso(r) {
+    const meta = [];
+    if (r.capacidade) meta.push(['Capacidade', `${r.capacidade} lugares`]);
+    if (r.localizacao) meta.push(['Local', esc(r.localizacao)]);
+    if (r.descricao) meta.push(['Detalhe', esc(r.descricao)]);
+    const tags = r.competencias.map((c) => `<span class="selo sem-ponto">${esc(c)}</span>`).join('')
+      + (r.restrito ? '<span class="selo selo-aviso sem-ponto">Exige aprovação</span>' : '');
+    const marcado = estado.selecionados.has(r.id);
+    return `<label class="recurso-card tipo-${esc(r.tipo)}${marcado ? ' escolhido' : ''}" data-recurso="${r.id}">
+      <span class="rc-topo"><span class="rc-tipo">${esc(ROTULO_TIPO[r.tipo] || r.tipo)}</span>
+        <input type="checkbox" class="form-check-input escolher" value="${r.id}" aria-label="Escolher ${esc(r.codigo)}"${marcado ? ' checked' : ''}></span>
+      <strong class="rc-nome">${esc(r.nome)}</strong>
+      <span class="rc-codigo">${esc(r.codigo)}</span>
+      <span class="rc-meta">${meta.map(([k, v]) => `<span><b>${k}</b>${v}</span>`).join('')}</span>
+      <span class="rc-tags">${tags}</span>
+      <span class="situacao"></span>
+    </label>`;
+  }
+
   async function pesquisar() {
     const filtros = new URLSearchParams();
-    const campos = { tipo: '#busca-tipo', texto: '#busca-texto', capacidadeMinima: '#busca-capacidade',
-      localizacao: '#busca-localizacao', competencia: '#busca-competencia' };
+    const campos = {
+      tipo: '#busca-tipo', texto: '#busca-texto', capacidadeMinima: '#busca-capacidade',
+      localizacao: '#busca-localizacao', competencia: '#busca-competencia'
+    };
     Object.entries(campos).forEach(([chave, seletor]) => { if ($(seletor).value) filtros.set(chave, $(seletor).value); });
     const inicio = paraApi($('#busca-inicio').value);
     const fim = paraApi($('#busca-fim').value);
@@ -212,29 +305,32 @@
       filtros.set('disponivelFim', fim);
     }
     const recursos = await api('GET', '/api/v1/recursos?' + filtros);
-    estado.selecionados.clear();
-    $('#tabela-recursos tbody').innerHTML = recursos.length === 0
-      ? '<tr><td colspan="7">Nenhum recurso encontrado com esses filtros.</td></tr>'
-      : recursos.map((r) => `<tr data-recurso="${r.id}">
-          <td><input type="checkbox" class="form-check-input escolher" value="${r.id}" aria-label="Escolher ${esc(r.codigo)}"></td>
-          <td>${esc(r.codigo)}${r.restrito ? ' <span class="badge text-bg-warning">exige aprovação</span>' : ''}</td>
-          <td class="quebra">${esc(r.nome)}${r.competencias.length ? `<br><small>${esc(r.competencias.join(', '))}</small>` : ''}</td>
-          <td>${esc(r.tipo)}</td><td>${esc(r.capacidade)}</td><td>${esc(r.localizacao)}</td>
-          <td class="situacao">—</td></tr>`).join('');
+    recursos.forEach((r) => estado.vistos.set(r.id, r));
+    $('#grade-recursos').innerHTML = recursos.length === 0
+      ? vazio('Nenhum recurso encontrado com esses filtros.')
+      : recursos.map(cartaoRecurso).join('');
+    atualizarPainel();
   }
 
-  $('#tabela-recursos').addEventListener('change', (evento) => {
+  $('#grade-recursos').addEventListener('change', (evento) => {
     if (!evento.target.classList.contains('escolher')) return;
     const id = Number(evento.target.value);
     if (evento.target.checked) estado.selecionados.add(id); else estado.selecionados.delete(id);
+    evento.target.closest('.recurso-card').classList.toggle('escolhido', evento.target.checked);
+    atualizarPainel();
   });
 
-  function periodoEscolhido() {
-    return { inicio: paraApi($('#busca-inicio').value), fim: paraApi($('#busca-fim').value) };
+  function atualizarPainel() {
+    const chips = [...estado.selecionados].map((id) => {
+      const r = estado.vistos.get(id);
+      return `<span class="chip-escolhido">${esc(r ? r.codigo : '#' + id)}</span>`;
+    });
+    $('#escolhidos').innerHTML = chips.length ? chips.join('') : '<span class="texto-suave">Nenhum recurso escolhido.</span>';
   }
 
   $('#botao-disponibilidade').addEventListener('click', () => executar(async () => {
-    const { inicio, fim } = periodoEscolhido();
+    const inicio = paraApi($('#busca-inicio').value);
+    const fim = paraApi($('#busca-fim').value);
     if (estado.selecionados.size === 0 || !inicio || !fim) {
       mostrar('warning', 'Faltam dados.', 'Escolha ao menos um recurso e informe início e término.');
       return;
@@ -242,11 +338,11 @@
     const ids = [...estado.selecionados].join(',');
     const situacoes = await api('GET', `/api/v1/disponibilidade?recursoIds=${ids}&inicio=${inicio}&fim=${fim}`);
     situacoes.forEach((s) => {
-      const celula = document.querySelector(`tr[data-recurso="${s.recursoId}"] .situacao`);
+      const celula = document.querySelector(`.recurso-card[data-recurso="${s.recursoId}"] .situacao`);
       if (!celula) return;
       celula.innerHTML = s.disponivel
-        ? '<span class="text-success">Livre</span>'
-        : `<span class="text-danger">Ocupado</span><br><small>${s.motivos.map((m) => esc(motivo(m))).join('<br>')}</small>`;
+        ? '<span class="livre">Livre neste período</span>'
+        : `<span class="ocupado">Ocupado</span><br><small>${s.motivos.map((m) => esc(motivo(m))).join('<br>')}</small>`;
     });
   }));
 
@@ -259,15 +355,14 @@
   $('#form-reserva').addEventListener('submit', (evento) => {
     evento.preventDefault();
     executar(async () => {
-      const { inicio, fim } = periodoEscolhido();
       const reserva = await api('POST', '/api/v1/reservas', {
-        inicio, fim,
+        inicio: paraApi($('#busca-inicio').value), fim: paraApi($('#busca-fim').value),
         finalidade: $('#reserva-finalidade').value,
         justificativa: $('#reserva-justificativa').value || null,
         recursoIds: [...estado.selecionados]
       });
       const situacao = reserva.estado === 'APROVADA' ? 'confirmada' : 'registrada e aguarda aprovação';
-      sucesso(`Reserva #${reserva.id} ${situacao} (${nomesEstado[reserva.estado][0]}).`);
+      sucesso(`Reserva #${reserva.id} ${situacao} (${nomesEstado[reserva.estado]}).`);
     });
   });
 
@@ -275,18 +370,17 @@
 
   async function carregarMinhas() {
     const reservas = await api('GET', '/api/v1/reservas/minhas');
-    $('#tabela-minhas tbody').innerHTML = reservas.length === 0
-      ? '<tr><td colspan="5">Você ainda não tem reservas.</td></tr>'
-      : reservas.map((r) => `<tr data-reserva="${r.id}">
-          <td>${r.id}</td><td>${esc(periodo(r))}</td><td class="quebra">${listaRecursos(r)}</td><td>${selo(r.estado)}</td>
-          <td class="d-flex gap-1">
-            ${['SOLICITADA', 'APROVADA'].includes(r.estado)
-              ? `<button class="btn btn-sm btn-outline-danger" data-acao="cancelar" data-id="${r.id}">Cancelar</button>` : ''}
-            <button class="btn btn-sm btn-outline-secondary" data-acao="historico" data-id="${r.id}">Histórico</button>
-          </td></tr>`).join('');
+    $('#lista-minhas').innerHTML = reservas.length === 0
+      ? vazio('Você ainda não tem reservas. Escolha um recurso em <strong>Reservar</strong>.')
+      : reservas.map((r) => cartaoReserva(r, {
+        acoes:
+          (['SOLICITADA', 'APROVADA'].includes(r.estado)
+            ? `<button class="btn btn-perigo btn-pequeno" data-acao="cancelar" data-id="${r.id}">Cancelar</button>` : '')
+          + `<button class="btn btn-suave btn-pequeno" data-acao="historico" data-id="${r.id}">Histórico</button>`
+      })).join('');
   }
 
-  $('#tabela-minhas').addEventListener('click', (evento) => {
+  $('#lista-minhas').addEventListener('click', (evento) => {
     const botao = evento.target.closest('button[data-acao]');
     if (!botao) return;
     const id = botao.dataset.id;
@@ -299,13 +393,19 @@
         const eventos = await api('GET', `/api/v1/reservas/${id}/historico`);
         const caixa = $('#historico');
         caixa.classList.remove('d-none');
-        caixa.innerHTML = `<h3 class="h6">Histórico da reserva #${esc(id)}</h3><ol class="mb-0">${eventos.map((e) =>
+        caixa.innerHTML = `<h2 class="cartao-titulo">Histórico da reserva #${esc(id)}</h2><ol class="mb-0">${eventos.map((e) =>
           `<li>${esc(dataHora(e.ocorridoEm))} — ${esc(e.acao)} por ${esc(e.ator)}: ${esc(e.estadoAnterior || '—')} → ${esc(e.estadoNovo || '—')}</li>`).join('')}</ol>`;
+        caixa.scrollIntoView({ block: 'nearest' });
       }
     });
   });
 
   // ------------------------------------------------------------------ aprovações e uso
+
+  const DECISAO = `<div class="rv-decisao">
+      <input class="form-control motivo" placeholder="Motivo da decisão (obrigatório para rejeitar)" aria-label="Motivo da decisão">
+      <button class="btn btn-ok btn-pequeno" data-acao="aprovar">Aprovar</button>
+      <button class="btn btn-perigo btn-pequeno" data-acao="rejeitar">Rejeitar</button></div>`;
 
   async function carregarAprovacoes() {
     const [fila, aprovadas, emUso] = await Promise.all([
@@ -313,36 +413,32 @@
       api('GET', '/api/v1/reservas?estado=APROVADA'),
       api('GET', '/api/v1/reservas?estado=EM_USO')
     ]);
-    $('#tabela-fila tbody').innerHTML = fila.length === 0
-      ? '<tr><td colspan="6">Nenhuma solicitação pendente.</td></tr>'
-      : fila.map((r) => `<tr data-reserva="${r.id}">
-          <td>${r.id}</td><td>${esc(r.solicitante.nome)}</td><td>${esc(periodo(r))}</td><td>${listaRecursos(r)}</td>
-          <td class="quebra">${esc(r.justificativa)}</td>
-          <td><div class="d-flex flex-wrap gap-1">
-            <input class="form-control form-control-sm motivo" placeholder="Motivo" aria-label="Motivo da decisão da reserva ${r.id}">
-            <button class="btn btn-sm btn-success" data-acao="aprovar" data-id="${r.id}">Aprovar</button>
-            <button class="btn btn-sm btn-outline-danger" data-acao="rejeitar" data-id="${r.id}">Rejeitar</button>
-          </div></td></tr>`).join('');
+    $('#lista-fila').innerHTML = fila.length === 0
+      ? vazio('Nenhuma solicitação aguardando decisão.')
+      : fila.map((r) => cartaoReserva(r, {
+        decisao: DECISAO.replace('data-acao="aprovar"', `data-acao="aprovar" data-id="${r.id}"`)
+          .replace('data-acao="rejeitar"', `data-acao="rejeitar" data-id="${r.id}"`)
+      })).join('');
     const uso = aprovadas.concat(emUso);
-    $('#tabela-uso tbody').innerHTML = uso.length === 0
-      ? '<tr><td colspan="6">Nenhuma reserva aprovada ou em uso.</td></tr>'
-      : uso.map((r) => `<tr data-reserva="${r.id}">
-          <td>${r.id}</td><td>${esc(r.solicitante.nome)}</td><td>${esc(periodo(r))}</td><td>${listaRecursos(r)}</td>
-          <td>${selo(r.estado)}</td><td class="d-flex gap-1">${r.estado === 'APROVADA'
-            ? `<button class="btn btn-sm btn-primary" data-acao="iniciar" data-id="${r.id}">Iniciar uso</button>
-               <button class="btn btn-sm btn-outline-danger" data-acao="nao-comparecimento" data-id="${r.id}">Não compareceu</button>`
-            : `<button class="btn btn-sm btn-secondary" data-acao="concluir" data-id="${r.id}">Concluir</button>`}</td></tr>`).join('');
+    $('#lista-uso').innerHTML = uso.length === 0
+      ? vazio('Nenhuma reserva aprovada ou em uso.')
+      : uso.map((r) => cartaoReserva(r, {
+        acoes: r.estado === 'APROVADA'
+          ? `<button class="btn btn-suave btn-pequeno" data-acao="iniciar" data-id="${r.id}">Iniciar uso</button>
+             <button class="btn btn-perigo btn-pequeno" data-acao="nao-comparecimento" data-id="${r.id}">Não compareceu</button>`
+          : `<button class="btn btn-suave btn-pequeno" data-acao="concluir" data-id="${r.id}">Concluir</button>`
+      })).join('');
   }
 
   $('#aba-aprovacoes').addEventListener('click', (evento) => {
     const botao = evento.target.closest('button[data-acao]');
     if (!botao) return;
     const id = botao.dataset.id;
-    const campo = botao.closest('tr').querySelector('.motivo');
+    const campo = botao.closest('.reserva-card').querySelector('.motivo');
     executar(async () => {
       const reserva = await api('POST', `/api/v1/reservas/${id}/${botao.dataset.acao}`,
         campo ? { motivo: campo.value || null } : undefined);
-      sucesso(`Reserva #${id}: ${nomesEstado[reserva.estado][0]}.`);
+      sucesso(`Reserva #${id}: ${nomesEstado[reserva.estado]}.`);
       await carregarAprovacoes();
     });
   });
@@ -351,15 +447,15 @@
 
   async function carregarMovimentacoes() {
     const abertas = await api('GET', '/api/v1/movimentacoes?situacao=ABERTAS');
-    $('#tabela-movimentacoes tbody').innerHTML = abertas.length === 0
-      ? '<tr><td colspan="6">Nenhum material pendente de devolução.</td></tr>'
-      : abertas.map((m) => `<tr>
-          <td>${m.id}</td><td>${m.reservaId}</td><td>${esc(m.recursoCodigo)}</td><td>${esc(dataHora(m.prazoDevolucao))}</td>
-          <td>${m.atrasada ? '<span class="badge text-bg-danger">Atrasada</span>' : '<span class="badge text-bg-success">No prazo</span>'}</td>
-          <td><div class="d-flex flex-wrap gap-1 align-items-center">
-            <label class="form-check-label small"><input type="checkbox" class="form-check-input avaria"> avaria</label>
-            <button class="btn btn-sm btn-primary" data-devolver="${m.id}">Registrar devolução</button>
-          </div></td></tr>`).join('');
+    $('#lista-movimentacoes').innerHTML = abertas.length === 0
+      ? vazio('Nenhum material pendente de devolução.')
+      : abertas.map((m) => `<div class="reserva-card" data-mov="${m.id}">
+          <div class="rv-data"><small>res.</small><b>${m.reservaId}</b></div>
+          <div class="rv-corpo"><h3>${esc(m.recursoNome)} <span class="texto-suave">· ${esc(m.recursoCodigo)}</span></h3>
+            <div class="rv-linha"><span>${icone('relogio')}Devolver até ${esc(dataHora(m.prazoDevolucao))}</span></div></div>
+          <div class="rv-acoes">${m.atrasada ? '<span class="selo selo-perigo">Atrasada</span>' : '<span class="selo selo-ok">No prazo</span>'}
+            <label class="check-suave"><input type="checkbox" class="form-check-input avaria"> avaria</label>
+            <button class="btn btn-primary btn-pequeno" data-devolver="${m.id}">Registrar devolução</button></div></div>`).join('');
   }
 
   $('#form-retirada').addEventListener('submit', (evento) => {
@@ -373,10 +469,10 @@
     });
   });
 
-  $('#tabela-movimentacoes').addEventListener('click', (evento) => {
+  $('#lista-movimentacoes').addEventListener('click', (evento) => {
     const botao = evento.target.closest('button[data-devolver]');
     if (!botao) return;
-    const avaria = botao.closest('tr').querySelector('.avaria').checked;
+    const avaria = botao.closest('.reserva-card').querySelector('.avaria').checked;
     executar(async () => {
       await api('POST', `/api/v1/movimentacoes/${botao.dataset.devolver}/devolucao`, { avaria });
       sucesso('Devolução registrada.');
@@ -392,14 +488,13 @@
       api('GET', '/api/v1/auditoria')
     ]);
     const indicadores = [
-      ['Aguardando aprovação', resumo.solicitacoesPendentes], ['Aprovadas', resumo.reservasPorEstado.APROVADA],
-      ['Em uso', resumo.reservasPorEstado.EM_USO], ['Materiais pendentes', resumo.movimentacoesAbertas],
-      ['Devoluções atrasadas', resumo.movimentacoesAtrasadas], ['Manutenções ativas', resumo.manutencoesAtivas],
-      ['Conflitos evitados', resumo.conflitosEvitados]
+      ['Aguardando aprovação', resumo.solicitacoesPendentes, resumo.solicitacoesPendentes > 0],
+      ['Aprovadas', resumo.reservasPorEstado.APROVADA], ['Em uso', resumo.reservasPorEstado.EM_USO],
+      ['Materiais pendentes', resumo.movimentacoesAbertas], ['Devoluções atrasadas', resumo.movimentacoesAtrasadas],
+      ['Manutenções ativas', resumo.manutencoesAtivas], ['Conflitos evitados', resumo.conflitosEvitados]
     ];
-    $('#painel-resumo').innerHTML = indicadores.map(([rotulo, valor]) => `<div class="col-6 col-md-3 col-xl">
-        <div class="card card-body cartao-indicador"><span class="small text-muted">${esc(rotulo)}</span>
-        <span class="valor">${esc(valor)}</span></div></div>`).join('');
+    $('#painel-resumo').innerHTML = indicadores.map(([rotulo, valor, destaque]) =>
+      `<div class="indicador${destaque ? ' destaque' : ''}"><small>${esc(rotulo)}</small><b>${esc(valor)}</b></div>`).join('');
     $('#tabela-auditoria tbody').innerHTML = auditoria.slice(0, 20).map((e) => `<tr>
         <td>${esc(dataHora(e.ocorridoEm))}</td><td>${esc(e.ator)}</td><td>${esc(e.acao)}</td>
         <td>${esc(e.entidade)} #${esc(e.entidadeId)}</td><td>${esc(e.estadoAnterior || '—')} → ${esc(e.estadoNovo || '—')}</td></tr>`).join('');
@@ -442,19 +537,19 @@
       ]);
       $('#relatorio-criterio').textContent = utilizacao.criterio;
       $('#tabela-relatorio tbody').innerHTML = utilizacao.itens.map((i) => `<tr><td>${esc(i.codigo)}</td>
-        <td>${esc(i.tipo)}</td><td>${i.reservas}</td><td>${i.horas}</td><td>${i.percentualOcupacao}%</td></tr>`).join('');
+        <td>${esc(ROTULO_TIPO[i.tipo] || i.tipo)}</td><td>${i.reservas}</td><td>${i.horas}</td><td>${i.percentualOcupacao}%</td></tr>`).join('');
       $('#relatorio-conflitos').textContent = `Conflitos evitados no período: ${conflitos.total}.`;
     });
   });
 
-  // ------------------------------------------------------------------ notificações
+  // ------------------------------------------------------------------ avisos do usuário
 
   async function carregarNotificacoes() {
     const lista = await api('GET', '/api/v1/notificacoes');
     $('#lista-notificacoes').innerHTML = lista.length === 0
-      ? '<li class="list-group-item">Sem notificações.</li>'
-      : lista.map((n) => `<li class="list-group-item"><small class="text-muted">${esc(dataHora(n.criadaEm))}</small><br>
-          ${esc(n.mensagem)}</li>`).join('');
+      ? vazio('Você não tem avisos por enquanto.')
+      : lista.map((n) => `<div class="notificacao">${icone('sino')}<div>${esc(n.mensagem)}<br>
+          <small>${esc(dataHora(n.criadaEm))}</small></div></div>`).join('');
   }
 
   iniciar();

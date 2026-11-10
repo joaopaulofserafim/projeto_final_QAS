@@ -105,10 +105,10 @@ class InterfaceE2ETest extends IntegracaoBase {
         pagina.fill("#busca-inicio", "2026-11-20T10:00");
         pagina.fill("#busca-fim", "2026-11-20T12:00");
         pagina.click("[data-testid=pesquisar]");
-        assertThat(pagina.locator("#tabela-recursos tbody")).containsText("SALA-E2E");
-        pagina.check("#tabela-recursos input.escolher");
+        assertThat(pagina.locator("#grade-recursos")).containsText("SALA-E2E");
+        pagina.check("#grade-recursos input.escolher");
         pagina.click("#botao-disponibilidade");
-        assertThat(pagina.locator("#tabela-recursos .situacao")).containsText("Livre");
+        assertThat(pagina.locator("#grade-recursos .situacao")).containsText("Livre");
 
         pagina.fill("#reserva-finalidade", "Aula de Engenharia de Software");
         pagina.click("[data-testid=solicitar-reserva]");
@@ -119,8 +119,8 @@ class InterfaceE2ETest extends IntegracaoBase {
         assertThat(pagina.locator("[data-testid=mensagem]")).containsText("já está reservado");
 
         pagina.click("button[data-aba=minhas]");
-        assertThat(pagina.locator("#tabela-minhas tbody tr")).hasCount(1);
-        assertThat(pagina.locator("#tabela-minhas")).containsText("Aprovada");
+        assertThat(pagina.locator("#lista-minhas .reserva-card")).hasCount(1);
+        assertThat(pagina.locator("#lista-minhas")).containsText("Aprovada");
         assertThat(errosNoConsole).as("erros de JavaScript/CSP no console").isEmpty();
     }
 
@@ -132,13 +132,13 @@ class InterfaceE2ETest extends IntegracaoBase {
         entrar("responsavel", "Rita Responsável");
 
         pagina.click("button[data-aba=aprovacoes]");
-        String linha = "#tabela-fila tr[data-reserva='" + id + "']";
+        String linha = "#lista-fila .reserva-card[data-reserva='" + id + "']";
         assertThat(pagina.locator(linha)).containsText("LAB-E2E");
         pagina.fill(linha + " .motivo", "Liberado para a disciplina");
         pagina.click(linha + " button[data-acao=aprovar]");
 
         assertThat(pagina.locator("[data-testid=mensagem]")).containsText("Aprovada");
-        assertThat(pagina.locator("#tabela-uso tr[data-reserva='" + id + "']")).containsText("Iniciar uso");
+        assertThat(pagina.locator("#lista-uso .reserva-card[data-reserva='" + id + "']")).containsText("Iniciar uso");
         assertThat(pagina.locator("button[data-aba=admin]")).isHidden();
     }
 
