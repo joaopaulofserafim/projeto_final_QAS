@@ -8,7 +8,8 @@
 
   const estado = {
     usuario: null, selecionados: new Set(), vistos: new Map(), temporizador: null,
-    feriados: new Map(), vigiaAvisos: null
+    feriados: new Map(), vigiaAvisos: null, vigiaRecursos: null,
+    buscaSeq: 0, situacoes: new Map(), editandoRecurso: null
   };
   const $ = (seletor) => document.querySelector(seletor);
 
@@ -82,9 +83,83 @@
     const lista = (itens || []).map((i) => `<li>${esc(i)}</li>`).join('');
     caixa.className = `toast-sor alert-${tipo}`;
     caixa.setAttribute('role', tipo === 'danger' ? 'alert' : 'status');
-    caixa.innerHTML = `<strong>${esc(titulo)}</strong> ${esc(detalhe || '')}${lista ? `<ul>${lista}</ul>` : ''}`;
+    caixa.innerHTML = `<div class="toast-corpo"><strong>${esc(titulo)}</strong> ${esc(detalhe || '')}${lista ? `<ul>${lista}</ul>` : ''}</div>
+      <button type="button" class="toast-fechar" aria-label="Fechar aviso" title="Fechar">${icone('fechar')}</button>`;
     clearTimeout(estado.temporizador);
     estado.temporizador = setTimeout(() => { caixa.className = 'd-none'; }, 9000);
+  }
+
+  $('#mensagem').addEventListener('click', (evento) => {
+    if (!evento.target.closest('.toast-fechar')) return;
+    clearTimeout(estado.temporizador);
+    $('#mensagem').className = 'd-none';
+  });
+
+  // ------------------------------------------------------------------ janela central (modal)
+
+  const ICONES_MODAL = { sucesso: 'check', erro: 'alerta', aviso: 'alerta', pergunta: 'alerta' };
+  let fecharModalAtual = null;
+
+  /**
+   * Abre a janela central e devolve uma Promise com o valor do botão escolhido (ou null se fechada).
+   * botoes: [{ texto, valor, classe }]; o último é o botão principal e recebe o foco.
+   */
+  function abrirModal({ tipo, titulo, texto, itens, botoes }) {
+    if (fecharModalAtual) fecharModalAtual(null);
+    const modal = $('#modal');
+    const opcoes = botoes || [{ texto: 'Entendi', valor: true, classe: 'btn-primary' }];
+    modal.dataset.tipo = tipo;
+    $('#modal-icone').innerHTML = icone(ICONES_MODAL[tipo] || 'alerta');
+    $('#modal-titulo').textContent = titulo;
+    $('#modal-texto').innerHTML = `<p>${esc(texto || '')}</p>${(itens || []).length
+      ? `<ul>${itens.map((i) => `<li>${esc(i)}</li>`).join('')}</ul>` : ''}`;
+    $('#modal-acoes').innerHTML = opcoes.map((b, i) =>
+      `<button type="button" class="btn ${b.classe || 'btn-suave'}" data-modal-valor="${i}" data-testid="modal-botao-${i}">${esc(b.texto)}</button>`).join('');
+    const anterior = document.activeElement;
+    modal.classList.remove('d-none');
+    document.body.classList.add('com-modal');
+    const principal = $('#modal-acoes').lastElementChild;
+    if (principal) principal.focus();
+    return new Promise((resolver) => {
+      fecharModalAtual = (valor) => {
+        modal.classList.add('d-none');
+        document.body.classList.remove('com-modal');
+        fecharModalAtual = null;
+        if (anterior && anterior.focus) anterior.focus();
+        resolver(valor);
+      };
+      modal.onclick = (evento) => {
+        const botao = evento.target.closest('[data-modal-valor]');
+        if (botao) fecharModalAtual(opcoes[Number(botao.dataset.modalValor)].valor);
+        else if (evento.target.closest('[data-modal-fechar]') || evento.target === modal) fecharModalAtual(null);
+      };
+    });
+  }
+
+  document.addEventListener('keydown', (evento) => {
+    if (evento.key === 'Escape' && fecharModalAtual) fecharModalAtual(null);
+  });
+
+  const MOTIVOS_CONFLITO = { RESERVA: 'já reservado', MANUTENCAO: 'em manutenção', RECURSO_INATIVO: 'desativado',
+    CONCORRENCIA: 'reservado por outra pessoa agora há pouco' };
+
+  /** Erro de API em forma de janela central (usado nas ações de reserva e cancelamento). */
+  function falhaEmModal(erro) {
+    if (!(erro instanceof ErroApi) || erro.status === 401) {
+      falha(erro);
+      return Promise.resolve(null);
+    }
+    const corpo = erro.corpo;
+    const itens = (corpo.conflitos || []).map((c) => `${c.recursoCodigo || 'Recurso'}: ${MOTIVOS_CONFLITO[c.motivo] || c.motivo}`
+      + (c.inicio && c.fim ? ` (${dataHora(c.inicio).substring(11)} – ${dataHora(c.fim).substring(11)})` : ''));
+    (corpo.erros || []).forEach((e) => itens.push(`${e.campo}: ${e.mensagem}`));
+    const indisponivel = erro.status === 409;
+    return abrirModal({
+      tipo: indisponivel ? 'aviso' : 'erro',
+      titulo: corpo.title || (indisponivel ? 'Indisponível' : 'Não foi possível concluir'),
+      texto: erro.message,
+      itens
+    });
   }
 
   function sucesso(texto) {
@@ -121,9 +196,21 @@
 
   // ------------------------------------------------------------------ sessão
 
+  /** Ao sair nada da sessão anterior pode ficar na tela (filtros, escolhas, finalidade, justificativa). */
+  function limparTela() {
+    document.querySelectorAll('#tela-app form').forEach((f) => f.reset());
+    estado.selecionados.clear();
+    estado.situacoes.clear();
+    estado.editandoRecurso = null;
+    $('#grade-recursos').innerHTML = '';
+    atualizarPainel();
+  }
+
   function telaLogin() {
     estado.usuario = null;
     clearInterval(estado.vigiaAvisos);
+    clearInterval(estado.vigiaRecursos);
+    limparTela();
     $('#tela-app').classList.add('d-none');
     $('#tela-login').classList.remove('d-none');
   }
@@ -147,6 +234,8 @@
     executar(verificarAvisos);
     clearInterval(estado.vigiaAvisos);
     estado.vigiaAvisos = setInterval(() => { verificarAvisos().catch(() => { /* tenta de novo no próximo ciclo */ }); }, 30000);
+    clearInterval(estado.vigiaRecursos);
+    estado.vigiaRecursos = setInterval(atualizarReservarEmSilencio, 20000);
   }
 
   async function iniciar() {
@@ -168,17 +257,35 @@
       });
       const corpo = await resposta.json().catch(() => null);
       if (!resposta.ok) {
-        mostrar('danger', 'Falha no login.', (corpo && corpo.detail) || 'Usuário ou senha inválidos.');
+        $('#login-erro').textContent = (corpo && corpo.detail) || 'Usuário ou senha inválidos.';
+        $('#login-erro').classList.remove('d-none');
+        $('#login-senha').value = '';
+        $('#login-senha').focus();
         return;
       }
+      $('#login-erro').classList.add('d-none');
       $('#mensagem').className = 'd-none';
+      $('#form-login').reset();
       telaApp(await api('GET', '/api/v1/auth/me'));
     });
   });
 
+  ['#login-usuario', '#login-senha'].forEach((s) => $(s).addEventListener('input', () => $('#login-erro').classList.add('d-none')));
+
+  $('#mostrar-senha').addEventListener('click', () => {
+    const campo = $('#login-senha');
+    const mostrar = campo.type === 'password';
+    campo.type = mostrar ? 'text' : 'password';
+    const botao = $('#mostrar-senha');
+    botao.setAttribute('aria-pressed', String(mostrar));
+    botao.setAttribute('aria-label', mostrar ? 'Ocultar senha' : 'Mostrar senha');
+    botao.title = mostrar ? 'Ocultar senha' : 'Mostrar senha';
+    botao.innerHTML = icone(mostrar ? 'olho-fechado' : 'olho');
+    campo.focus();
+  });
+
   $('#botao-sair').addEventListener('click', () => executar(async () => {
     await api('POST', '/api/v1/auth/logout');
-    estado.selecionados.clear();
     telaLogin();
     sucesso('Sessão encerrada.');
   }));
@@ -191,7 +298,7 @@
   };
 
   const carregadores = {
-    reservar: () => Promise.resolve(),
+    reservar: () => pesquisar(),
     minhas: carregarMinhas,
     aprovacoes: carregarAprovacoes,
     movimentacoes: carregarMovimentacoes,
@@ -334,6 +441,7 @@
     $('#busca-fim').value = amanha(ate);
     resumirPeriodo();
     executar(validarPeriodo);
+    executar(pesquisar);
   });
 
   function resumirPeriodo() {
@@ -346,6 +454,7 @@
   ['#busca-inicio', '#busca-fim'].forEach((s) => $(s).addEventListener('change', () => {
     resumirPeriodo();
     executar(validarPeriodo);
+    executar(pesquisar);
   }));
 
   $('#form-busca').addEventListener('submit', (evento) => {
@@ -361,14 +470,16 @@
     const tags = r.competencias.map((c) => `<span class="selo sem-ponto">${esc(c)}</span>`).join('')
       + (r.restrito ? '<span class="selo selo-aviso sem-ponto">Exige aprovação</span>' : '');
     const marcado = estado.selecionados.has(r.id);
-    return `<label class="recurso-card tipo-${esc(r.tipo)}${marcado ? ' escolhido' : ''}" data-recurso="${r.id}">
+    const situacao = estado.situacoes.get(r.id);
+    const bloqueado = situacao && !situacao.disponivel;
+    return `<label class="recurso-card tipo-${esc(r.tipo)}${marcado ? ' escolhido' : ''}${bloqueado ? ' indisponivel' : ''}" data-recurso="${r.id}"${bloqueado ? ' aria-disabled="true"' : ''}>
       <span class="rc-topo"><span class="rc-tipo">${esc(ROTULO_TIPO[r.tipo] || r.tipo)}</span>
-        <input type="checkbox" class="form-check-input escolher" value="${r.id}" aria-label="Escolher ${esc(r.codigo)}"${marcado ? ' checked' : ''}></span>
+        <input type="checkbox" class="form-check-input escolher" value="${r.id}" aria-label="Escolher ${esc(r.codigo)}"${marcado ? ' checked' : ''}${bloqueado ? ' disabled' : ''}></span>
       <strong class="rc-nome">${esc(r.nome)}</strong>
       <span class="rc-codigo">${esc(r.codigo)}</span>
       <span class="rc-meta">${meta.map(([k, v]) => `<span><b>${k}</b>${v}</span>`).join('')}</span>
       <span class="rc-tags">${tags}</span>
-      <span class="situacao"></span>
+      <span class="situacao">${situacao ? textoSituacao(situacao) : ''}</span>
     </label>`;
   }
 
@@ -385,12 +496,46 @@
       filtros.set('disponivelInicio', inicio);
       filtros.set('disponivelFim', fim);
     }
+    const seq = ++estado.buscaSeq;
     const recursos = await api('GET', '/api/v1/recursos?' + filtros);
+    if (seq !== estado.buscaSeq) return; // uma busca mais nova já respondeu
     recursos.forEach((r) => estado.vistos.set(r.id, r));
+    const ids = new Set(recursos.map((r) => r.id));
+    [...estado.selecionados].forEach((id) => { if (!ids.has(id)) estado.selecionados.delete(id); });
+    estado.situacoes = await consultarSituacoes([...ids]);
+    if (seq !== estado.buscaSeq) return;
+    [...estado.selecionados].forEach((id) => {
+      const s = estado.situacoes.get(id);
+      if (s && !s.disponivel) estado.selecionados.delete(id);
+    });
     $('#grade-recursos').innerHTML = recursos.length === 0
       ? vazio('Nenhum recurso encontrado com esses filtros.')
       : SECOES.map((secao) => secaoRecursos(secao, recursos.filter((r) => r.tipo === secao.tipo))).join('');
     atualizarPainel();
+  }
+
+  /** Situação de todos os recursos listados no período escolhido (livre, reservado, em manutenção). */
+  async function consultarSituacoes(ids) {
+    const inicio = paraApi($('#busca-inicio').value);
+    const fim = paraApi($('#busca-fim').value);
+    if (ids.length === 0 || !inicio || !fim || fim <= inicio) return new Map();
+    const lista = await api('GET', `/api/v1/disponibilidade?recursoIds=${ids.join(',')}&inicio=${inicio}&fim=${fim}`);
+    return new Map(lista.map((s) => [s.recursoId, s]));
+  }
+
+  function textoSituacao(s) {
+    if (s.disponivel) return '<span class="livre">Livre neste período</span>';
+    const emManutencao = s.motivos.some((m) => m.motivo === 'MANUTENCAO');
+    const rotulo = s.motivos.some((m) => m.motivo === 'RECURSO_INATIVO') ? 'Desativado'
+      : emManutencao ? 'Em manutenção' : 'Reservado neste horário';
+    return `<span class="ocupado">${rotulo}</span><small>${s.motivos.map((m) => esc(motivo(m))).join('<br>')}</small>`;
+  }
+
+  /** Atualização periódica da aba Reservar: novos cadastros e horários liberados aparecem sozinhos. */
+  function atualizarReservarEmSilencio() {
+    const visivel = !$('#aba-reservar').classList.contains('d-none') && document.visibilityState === 'visible';
+    if (!estado.usuario || !visivel || fecharModalAtual) return;
+    pesquisar().catch(() => { /* tenta de novo no próximo ciclo */ });
   }
 
   const SECOES = [
@@ -426,7 +571,7 @@
   }
 
   $('#grade-recursos').addEventListener('change', (evento) => {
-    if (!evento.target.classList.contains('escolher')) return;
+    if (!evento.target.classList.contains('escolher') || evento.target.disabled) return;
     const id = Number(evento.target.value);
     const excedido = evento.target.checked ? limiteExcedido(id) : null;
     if (excedido) {
@@ -447,28 +592,11 @@
     $('#escolhidos').innerHTML = chips.length ? chips.join('') : '<span class="texto-suave">Nenhum recurso escolhido.</span>';
   }
 
-  $('#botao-disponibilidade').addEventListener('click', () => executar(async () => {
-    const inicio = paraApi($('#busca-inicio').value);
-    const fim = paraApi($('#busca-fim').value);
-    if (estado.selecionados.size === 0 || !inicio || !fim) {
-      mostrar('warning', 'Faltam dados.', 'Escolha ao menos um recurso e informe início e término.');
-      return;
-    }
-    const ids = [...estado.selecionados].join(',');
-    const situacoes = await api('GET', `/api/v1/disponibilidade?recursoIds=${ids}&inicio=${inicio}&fim=${fim}`);
-    situacoes.forEach((s) => {
-      const celula = document.querySelector(`.recurso-card[data-recurso="${s.recursoId}"] .situacao`);
-      if (!celula) return;
-      celula.innerHTML = s.disponivel
-        ? '<span class="livre">Livre neste período</span>'
-        : `<span class="ocupado">Ocupado</span><br><small>${s.motivos.map((m) => esc(motivo(m))).join('<br>')}</small>`;
-    });
-  }));
+  $('#botao-disponibilidade').addEventListener('click', () => executar(pesquisar));
 
   function motivo(m) {
-    if (m.motivo === 'RECURSO_INATIVO') return 'Recurso desativado';
-    const tipo = m.motivo === 'MANUTENCAO' ? 'Manutenção' : 'Reservado';
-    return `${tipo}: ${dataHora(m.inicio)} – ${dataHora(m.fim).substring(11)}`;
+    if (m.motivo === 'RECURSO_INATIVO') return 'Recurso desativado pela administração';
+    return `${dataHora(m.inicio)} – ${dataHora(m.fim).substring(11)}`;
   }
 
   $('#form-reserva').addEventListener('submit', (evento) => {
@@ -476,20 +604,39 @@
     executar(async () => {
       const problema = await validarPeriodo();
       if (problema) {
-        mostrar('warning', 'Período indisponível.', problema);
+        await abrirModal({ tipo: 'aviso', titulo: 'Período indisponível', texto: problema });
         return;
       }
-      const reserva = await api('POST', '/api/v1/reservas', {
-        inicio: paraApi($('#busca-inicio').value), fim: paraApi($('#busca-fim').value),
-        finalidade: $('#reserva-finalidade').value,
-        justificativa: $('#reserva-justificativa').value || null,
-        recursoIds: [...estado.selecionados]
-      });
-      const situacao = reserva.estado === 'APROVADA' ? 'confirmada' : 'registrada e aguarda aprovação';
-      sucesso(`Reserva #${reserva.id} ${situacao} (${nomesEstado[reserva.estado]}).`);
-      $('#reserva-finalidade').value = '';
-      $('#reserva-justificativa').value = '';
+      if (estado.selecionados.size === 0) {
+        await abrirModal({ tipo: 'aviso', titulo: 'Escolha um recurso', texto: 'Marque ao menos um recurso livre para reservar.' });
+        return;
+      }
+      let reserva;
+      try {
+        reserva = await api('POST', '/api/v1/reservas', {
+          inicio: paraApi($('#busca-inicio').value), fim: paraApi($('#busca-fim').value),
+          finalidade: $('#reserva-finalidade').value,
+          justificativa: $('#reserva-justificativa').value || null,
+          recursoIds: [...estado.selecionados]
+        });
+      } catch (erro) {
+        await falhaEmModal(erro);
+        pesquisar().catch(() => { /* a grade se atualiza no próximo ciclo */ });
+        return;
+      }
+      $('#form-reserva').reset();
+      estado.selecionados.clear();
+      await pesquisar();
       verificarAvisos().catch(() => { /* o aviso chega no próximo ciclo */ });
+      const aprovada = reserva.estado === 'APROVADA';
+      await abrirModal({
+        tipo: 'sucesso',
+        titulo: aprovada ? 'Reserva confirmada' : 'Solicitação enviada',
+        texto: aprovada
+          ? `A reserva nº ${reserva.id} foi confirmada para ${dataHora(reserva.inicio)} – ${dataHora(reserva.fim).substring(11)}.`
+          : `A reserva nº ${reserva.id} foi registrada e aguarda a aprovação do responsável.`,
+        itens: reserva.recursos.map((r) => `${r.codigo} — ${r.nome}`)
+      });
     });
   });
 
@@ -513,9 +660,24 @@
     const id = botao.dataset.id;
     executar(async () => {
       if (botao.dataset.acao === 'cancelar') {
-        await api('POST', `/api/v1/reservas/${id}/cancelar`, { motivo: 'Cancelada pelo solicitante' });
-        sucesso(`Reserva #${id} cancelada.`);
+        const confirmar = await abrirModal({
+          tipo: 'pergunta',
+          titulo: `Cancelar a reserva nº ${id}?`,
+          texto: 'O horário fica livre para outras pessoas. Essa ação não pode ser desfeita.',
+          botoes: [
+            { texto: 'Manter reserva', valor: false, classe: 'btn-suave' },
+            { texto: 'Cancelar reserva', valor: true, classe: 'btn-perigo-cheio' }
+          ]
+        });
+        if (!confirmar) return;
+        try {
+          await api('POST', `/api/v1/reservas/${id}/cancelar`, { motivo: 'Cancelada pelo solicitante' });
+        } catch (erro) {
+          await falhaEmModal(erro);
+          return;
+        }
         await carregarMinhas();
+        await abrirModal({ tipo: 'sucesso', titulo: 'Reserva cancelada', texto: `A reserva nº ${id} foi cancelada e o horário foi liberado.` });
       } else {
         await alternarHistorico(botao, id);
       }
@@ -697,18 +859,51 @@
         <td>${esc(e.entidade)} #${esc(e.entidadeId)}</td><td>${esc(e.estadoAnterior || '—')} → ${esc(e.estadoNovo || '—')}</td></tr>`).join('');
   }
 
+  /** O mesmo formulário cadastra e edita; na edição, código e tipo ficam travados (não mudam depois de criados). */
+  function modoEdicaoRecurso(recurso) {
+    estado.editandoRecurso = recurso ? recurso.id : null;
+    const form = $('#form-recurso');
+    form.reset();
+    form.classList.toggle('editando', Boolean(recurso));
+    $('#recurso-codigo').disabled = Boolean(recurso);
+    $('#recurso-tipo').disabled = Boolean(recurso);
+    $('#cancelar-edicao').classList.toggle('d-none', !recurso);
+    $('#salvar-recurso').textContent = recurso ? 'Salvar alterações' : 'Cadastrar';
+    $('#form-recurso-titulo').textContent = recurso ? `Editar ${recurso.codigo}` : 'Cadastrar recurso';
+    $('#form-recurso-ajuda').textContent = recurso
+      ? 'Código e tipo não mudam depois do cadastro. As alterações valem para as próximas reservas.'
+      : 'Salas, professores, materiais e equipamentos ficam disponíveis para reserva assim que cadastrados.';
+    if (!recurso) return;
+    $('#recurso-codigo').value = recurso.codigo;
+    $('#recurso-tipo').value = recurso.tipo;
+    $('#recurso-nome').value = recurso.nome;
+    $('#recurso-capacidade').value = recurso.capacidade || '';
+    $('#recurso-localizacao').value = recurso.localizacao || '';
+    $('#recurso-descricao').value = recurso.descricao || '';
+    $('#recurso-competencias').value = (recurso.competencias || []).join(', ');
+    $('#recurso-restrito').checked = recurso.restrito;
+    form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    $('#recurso-nome').focus({ preventScroll: true });
+  }
+
+  $('#cancelar-edicao').addEventListener('click', () => modoEdicaoRecurso(null));
+
   $('#form-recurso').addEventListener('submit', (evento) => {
     evento.preventDefault();
     executar(async () => {
       const competencias = $('#recurso-competencias').value.split(',').map((c) => c.trim()).filter(Boolean);
-      const recurso = await api('POST', '/api/v1/recursos', {
+      const dados = {
         codigo: $('#recurso-codigo').value, nome: $('#recurso-nome').value, tipo: $('#recurso-tipo').value,
         capacidade: $('#recurso-capacidade').value ? Number($('#recurso-capacidade').value) : null,
-        localizacao: $('#recurso-localizacao').value || null, restrito: $('#recurso-restrito').checked,
-        competencias: competencias.length ? competencias : null
-      });
-      sucesso(`Recurso ${recurso.codigo} cadastrado (id ${recurso.id}).`);
-      evento.target.reset();
+        localizacao: $('#recurso-localizacao').value || null, descricao: $('#recurso-descricao').value || null,
+        restrito: $('#recurso-restrito').checked, competencias: competencias.length ? competencias : null
+      };
+      const editando = estado.editandoRecurso;
+      const recurso = editando
+        ? await api('PUT', `/api/v1/recursos/${editando}`, dados)
+        : await api('POST', '/api/v1/recursos', dados);
+      sucesso(editando ? `Recurso ${recurso.codigo} atualizado.` : `Recurso ${recurso.codigo} cadastrado (id ${recurso.id}).`);
+      modoEdicaoRecurso(null);
       await carregarRecursosAdmin();
     });
   });
@@ -743,6 +938,7 @@
 
   async function carregarRecursosAdmin() {
     const recursos = await api('GET', '/api/v1/recursos?incluirInativos=true');
+    estado.recursosAdmin = new Map(recursos.map((r) => [r.id, r]));
     $('#lista-recursos-admin').innerHTML = recursos.length === 0
       ? vazio('Nenhum recurso cadastrado.')
       : SECOES.map((secao) => {
@@ -750,13 +946,20 @@
         if (itens.length === 0) return '';
         return `<h3 class="lista-compacta-grupo">${icone(secao.icone)}${secao.titulo}<span class="contagem">${itens.length}</span></h3>
           ${itens.map((r) => `<div class="item-compacto${r.ativo ? '' : ' inativo'}">
-            <div><strong>${esc(r.nome)}</strong><small>${esc(r.codigo)} · id ${r.id}${r.restrito ? ' · exige aprovação' : ''}</small></div>
-            <button type="button" class="btn btn-suave btn-pequeno" data-recurso-acao="${r.ativo ? 'desativar' : 'reativar'}" data-id="${r.id}">
-              ${r.ativo ? 'Desativar' : 'Reativar'}</button></div>`).join('')}`;
+            <div><strong>${esc(r.nome)}</strong><small>${esc(r.codigo)} · id ${r.id}${r.restrito ? ' · exige aprovação' : ''}${r.ativo ? '' : ' · desativado'}</small></div>
+            <span class="item-acoes">
+              <button type="button" class="btn btn-suave btn-pequeno" data-recurso-editar="${r.id}">Editar</button>
+              <button type="button" class="btn btn-suave btn-pequeno" data-recurso-acao="${r.ativo ? 'desativar' : 'reativar'}" data-id="${r.id}">
+                ${r.ativo ? 'Desativar' : 'Reativar'}</button></span></div>`).join('')}`;
       }).join('');
   }
 
   $('#lista-recursos-admin').addEventListener('click', (evento) => {
+    const editar = evento.target.closest('button[data-recurso-editar]');
+    if (editar) {
+      modoEdicaoRecurso(estado.recursosAdmin.get(Number(editar.dataset.recursoEditar)));
+      return;
+    }
     const botao = evento.target.closest('button[data-recurso-acao]');
     if (!botao) return;
     executar(async () => {

@@ -99,36 +99,68 @@ class InterfaceE2ETest extends IntegracaoBase {
     }
 
     @Test
-    void solicitantePesquisaVerificaReservaEVeOConflitoNaTela() {
-        api.criarRecurso("SALA-E2E", "SALA", false);
+    void solicitanteReservaVeResultadoEmJanelaECartaoOcupadoFicaBloqueado() {
+        long sala = api.criarRecurso("SALA-E2E", "SALA", false);
         entrar("solicitante", "Marina Costa");
 
         pagina.selectOption("#busca-tipo", "SALA");
         pagina.fill("#busca-inicio", "2026-11-20T10:00");
         pagina.fill("#busca-fim", "2026-11-20T12:00");
         pagina.click("[data-testid=pesquisar]");
-        assertThat(pagina.locator("#grade-recursos")).containsText("SALA-E2E");
+        String cartao = "#grade-recursos .recurso-card[data-recurso='" + sala + "']";
+        assertThat(pagina.locator(cartao)).containsText("Livre neste período");
         assertThat(pagina.locator("#grade-recursos .secao-recursos-titulo").first()).containsText("Salas");
-        pagina.check("#grade-recursos input.escolher");
-        pagina.click("#botao-disponibilidade");
-        assertThat(pagina.locator("#grade-recursos .situacao")).containsText("Livre");
+        pagina.check(cartao + " input.escolher");
 
         pagina.fill("#reserva-finalidade", "Aula de Engenharia de Software");
         pagina.click("[data-testid=solicitar-reserva]");
-        assertThat(pagina.locator("[data-testid=mensagem]")).containsText("confirmada");
+        assertThat(pagina.locator("[data-testid=modal]")).containsText("Reserva confirmada");
+        assertThat(pagina.locator("[data-testid=modal]")).containsText("SALA-E2E");
+        pagina.click("[data-testid=modal-botao-0]");
+        assertThat(pagina.locator("[data-testid=modal]")).isHidden();
 
+        // Depois de reservar: campos limpos, nada selecionado e o cartão fica cinza, sem clique
         assertThat(pagina.locator("#reserva-finalidade")).hasValue("");
-        pagina.fill("#reserva-finalidade", "Aula de Engenharia de Software");
-        pagina.click("[data-testid=solicitar-reserva]");
-        assertThat(pagina.locator("[data-testid=mensagem]")).containsText("Conflito de horário");
-        assertThat(pagina.locator("[data-testid=mensagem]")).containsText("já está reservado");
+        assertThat(pagina.locator("#escolhidos")).containsText("Nenhum recurso escolhido");
+        assertThat(pagina.locator(cartao)).hasClass(java.util.regex.Pattern.compile("indisponivel"));
+        assertThat(pagina.locator(cartao)).containsText("Reservado neste horário");
+        assertThat(pagina.locator(cartao + " input.escolher")).isDisabled();
 
         pagina.click("button[data-aba=minhas]");
         assertThat(pagina.locator("#lista-minhas .reserva-card")).hasCount(1);
         assertThat(pagina.locator("#lista-minhas")).containsText("Aprovada");
-
         pagina.click("#lista-minhas button[data-acao=historico]");
-        assertThat(pagina.locator("#lista-minhas .reserva-card .rv-historico")).containsText("Reserva criada");
+        assertThat(pagina.locator("#lista-minhas .reserva-card .rv-historico")).containsText("Confirmada na hora");
+
+        pagina.click("#lista-minhas button[data-acao=cancelar]");
+        assertThat(pagina.locator("[data-testid=modal]")).containsText("Cancelar a reserva");
+        pagina.click("[data-testid=modal-botao-1]");
+        assertThat(pagina.locator("[data-testid=modal]")).containsText("Reserva cancelada");
+        pagina.click("[data-testid=modal-botao-0]");
+        assertThat(pagina.locator("#lista-minhas")).containsText("Cancelada");
+        assertThat(errosNoConsole).as("erros de JavaScript/CSP no console").isEmpty();
+    }
+
+    @Test
+    void conflitoNoMomentoDoEnvioApareceEmJanelaCentral() {
+        long sala = api.criarRecurso("SALA-DISPUTADA", "SALA", false);
+        entrar("solicitante", "Marina Costa");
+        pagina.fill("#busca-inicio", "2026-11-20T10:00");
+        pagina.fill("#busca-fim", "2026-11-20T12:00");
+        pagina.click("[data-testid=pesquisar]");
+        String cartao = "#grade-recursos .recurso-card[data-recurso='" + sala + "']";
+        assertThat(pagina.locator(cartao)).containsText("Livre neste período");
+        pagina.check(cartao + " input.escolher");
+
+        // Outra pessoa reserva o mesmo horário enquanto a tela ainda mostra "livre"
+        api.como("solicitante2").post("/api/v1/reservas", pedidoReserva("2026-11-20T10:00:00", "2026-11-20T12:00:00", sala));
+        pagina.fill("#reserva-finalidade", "Monitoria");
+        pagina.click("[data-testid=solicitar-reserva]");
+
+        assertThat(pagina.locator("[data-testid=modal]")).containsText("Conflito de horário");
+        assertThat(pagina.locator("[data-testid=modal]")).containsText("já está reservado");
+        pagina.click("[data-testid=modal-botao-0]");
+        assertThat(pagina.locator(cartao)).hasClass(java.util.regex.Pattern.compile("indisponivel"));
         assertThat(errosNoConsole).as("erros de JavaScript/CSP no console").isEmpty();
     }
 
@@ -157,8 +189,13 @@ class InterfaceE2ETest extends IntegracaoBase {
         pagina.fill("#login-senha", "errada");
         pagina.click("[data-testid=entrar]");
 
-        assertThat(pagina.locator("[data-testid=mensagem]")).containsText("Usuário ou senha inválidos");
+        assertThat(pagina.locator("[data-testid=login-erro]")).containsText("Usuário ou senha inválidos");
+        assertThat(pagina.locator("[data-testid=mensagem]")).isHidden();
         assertThat(pagina.locator("#tela-app")).isHidden();
+
+        pagina.fill("#login-senha", "visivel");
+        pagina.click("#mostrar-senha");
+        assertThat(pagina.locator("#login-senha")).hasAttribute("type", "text");
     }
 
     @Test

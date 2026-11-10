@@ -101,8 +101,9 @@ class ReservaTransacoes {
         travados.forEach(r -> ocupacoes.save(Ocupacao.deReserva(r, reserva.getId(), periodo, estado.ocupaHorario())));
 
         auditoria.registrar(ator.username(), "RESERVA_CRIADA", ENTIDADE, reserva.getId(), null, estado,
-                "recursos=" + codigos(travados) + (exigeAprovacao ? "; aguarda aprovação"
-                        : "; aprovação automática (nenhum recurso restrito)"));
+                "Recursos: " + codigos(travados) + ". " + (exigeAprovacao
+                        ? "Aguarda a aprovação do responsável, pois há recurso que exige aprovação."
+                        : "Confirmada na hora: nenhum dos recursos exige aprovação."));
         eventos.publishEvent(new ReservaEvento(reserva.getId(), ReservaEvento.Tipo.CRIADA, ator.id(), estado, null));
         return ReservaVisao.de(reserva, travados);
     }
@@ -376,7 +377,7 @@ class ReservaTransacoes {
     }
 
     static String codigos(List<Recurso> lista) {
-        return lista.stream().map(Recurso::getCodigo).collect(Collectors.joining(","));
+        return lista.stream().map(Recurso::getCodigo).collect(Collectors.joining(", "));
     }
 
     static String aparar(String valor) {
