@@ -85,3 +85,4 @@ Atalhos recomendados no Gemini:
 - `npm run validate:structure`
 - `npm run validate:agents`
 <!-- AIOX-MANAGED-END: commands -->
+

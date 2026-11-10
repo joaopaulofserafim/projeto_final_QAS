@@ -10,3 +10,4 @@ public class SistemaOrganizacaoRecursosApplication {
         SpringApplication.run(SistemaOrganizacaoRecursosApplication.class, args);
     }
 }
+

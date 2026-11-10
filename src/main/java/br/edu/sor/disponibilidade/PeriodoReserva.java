@@ -18,3 +18,4 @@ public record PeriodoReserva(LocalDateTime inicio, LocalDateTime termino) {
         return inicio.isBefore(outro.termino) && outro.inicio.isBefore(termino);
     }
 }
+

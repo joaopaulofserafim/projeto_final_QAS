@@ -4,6 +4,8 @@ Aplicação para reservar **salas, professores, materiais e equipamentos** de um
 
 Projeto final de Qualidade e Teste de Software — versão **1.0.0-rc1** (Release Candidate).
 
+**Integrantes:** Diego Sarti Araujo Viana · Lucas Soares Valerio dos Santos · João Paulo Figueiredo Serafim · João Victor Furin Lamas.
+
 | | |
 |---|---|
 | Stack | Java 21 · Spring Boot 3.5 · PostgreSQL 16 · Flyway · Spring Security · springdoc-openapi · Bootstrap 5 |
