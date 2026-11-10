@@ -2,6 +2,11 @@ spring:
   flyway:
     locations: classpath:db/migration
 sor:
+  # Calendário fixo de teste: os cenários usam datas de novembro de 2026; o cálculo dos feriados nacionais
+  # é coberto por CalendarioAcademicoTest. Aqui só o Natal de 2026 é feriado.
+  calendario:
+    feriados-nacionais: false
+    feriados-extras: 2026-12-25
   notificacao:
     modo: simulado
 logging:

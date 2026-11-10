@@ -119,11 +119,39 @@ class ReservaApiTest extends IntegracaoBase {
         assertThat(contar("select count(*) from reserva")).isEqualTo(1);
     }
 
+    @Test
+    void interfaceConsultaOsFeriadosConfigurados() {
+        JsonNode feriados = api.como("solicitante").get("/api/v1/disponibilidade/feriados?ano=2026").getBody();
+
+        assertThat(feriados).hasSize(1);
+        assertThat(feriados.get(0).asText()).isEqualTo("2026-12-25");
+    }
+
+    @Test
+    void reservaNaoPodePrenderOCatalogoInteiro() {
+        long projetor2 = api.criarRecurso("PROJ-2", "EQUIPAMENTO", false);
+        long cabo = api.criarRecurso("CABO-1", "MATERIAL", false);
+        long kit = api.criarRecurso("KIT-1", "MATERIAL", false);
+
+        ResponseEntity<JsonNode> duasSalas = reservar("solicitante", "10:00:00", "12:00:00", sala, sala2);
+        ResponseEntity<JsonNode> quatroItens = reservar("solicitante", "10:00:00", "12:00:00", projetor, projetor2, cabo, kit);
+        ResponseEntity<JsonNode> composicaoMaxima = reservar("solicitante", "10:00:00", "12:00:00",
+                sala, professora, projetor, cabo, kit);
+
+        assertThat(duasSalas.getStatusCode().value()).isEqualTo(400);
+        assertThat(duasSalas.getBody().get("detail").asText()).contains("no máximo 1 sala, 1 professor e 3 itens");
+        assertThat(quatroItens.getStatusCode().value()).isEqualTo(400);
+        assertThat(composicaoMaxima.getStatusCode().value()).isEqualTo(201);
+        assertThat(contar("select count(*) from reserva")).isEqualTo(1);
+    }
+
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
         "término antes do início | 2026-11-20T12:00:00 | 2026-11-20T10:00:00 | 400 | O término deve ser posterior",
         "término igual ao início | 2026-11-20T10:00:00 | 2026-11-20T10:00:00 | 400 | O término deve ser posterior",
-        "início no passado       | 2026-11-08T10:00:00 | 2026-11-08T12:00:00 | 400 | data e hora futura"
+        "início no passado       | 2026-11-08T10:00:00 | 2026-11-08T12:00:00 | 400 | data e hora futura",
+        "dia de feriado          | 2026-12-25T10:00:00 | 2026-12-25T12:00:00 | 400 | 25/12/2026 é feriado",
+        "período cruza o feriado | 2026-12-24T20:00:00 | 2026-12-26T08:00:00 | 400 | 25/12/2026 é feriado"
     })
     void periodoInvalidoEhRecusadoComMensagemClara(String caso, String inicio, String fim, int status, String mensagem) {
         ResponseEntity<JsonNode> resposta = api.como("solicitante").post("/api/v1/reservas",

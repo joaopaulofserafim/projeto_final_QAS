@@ -23,12 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 import br.edu.sor.auditoria.AuditoriaService;
 import br.edu.sor.catalogo.Recurso;
 import br.edu.sor.catalogo.RecursoRepository;
+import br.edu.sor.catalogo.TipoRecurso;
 import br.edu.sor.compartilhado.erro.AcessoNegadoException;
 import br.edu.sor.compartilhado.erro.EntradaInvalidaException;
 import br.edu.sor.compartilhado.erro.NaoEncontradoException;
 import br.edu.sor.compartilhado.erro.RegraNegocioException;
 import br.edu.sor.compartilhado.erro.TransicaoInvalidaException;
 import br.edu.sor.auditoria.EventoAuditoria;
+import br.edu.sor.disponibilidade.CalendarioAcademico;
 import br.edu.sor.disponibilidade.DisponibilidadeService;
 import br.edu.sor.disponibilidade.Ocupacao;
 import br.edu.sor.disponibilidade.OcupacaoRepository;
@@ -47,6 +49,10 @@ class ReservaTransacoes {
 
     static final String ENTIDADE = "RESERVA";
     static final int LIMITE_CONSULTA = 500;
+    /** RN-032: por reserva, no máximo 1 sala, 1 professor e 3 itens entre materiais e equipamentos. */
+    static final int MAX_SALAS = 1;
+    static final int MAX_PROFESSORES = 1;
+    static final int MAX_ITENS = 3;
 
     private final ReservaRepository reservas;
     private final OcupacaoRepository ocupacoes;
@@ -57,10 +63,12 @@ class ReservaTransacoes {
     private final ApplicationEventPublisher eventos;
     private final List<PendenciasDeDevolucao> pendencias;
     private final Clock relogio;
+    private final CalendarioAcademico calendario;
 
     ReservaTransacoes(ReservaRepository reservas, OcupacaoRepository ocupacoes, RecursoRepository recursos,
             UsuarioRepository usuarios, DisponibilidadeService disponibilidade, AuditoriaService auditoria,
-            ApplicationEventPublisher eventos, List<PendenciasDeDevolucao> pendencias, Clock relogio) {
+            ApplicationEventPublisher eventos, List<PendenciasDeDevolucao> pendencias, Clock relogio,
+            CalendarioAcademico calendario) {
         this.reservas = reservas;
         this.ocupacoes = ocupacoes;
         this.recursos = recursos;
@@ -70,6 +78,7 @@ class ReservaTransacoes {
         this.eventos = eventos;
         this.pendencias = pendencias;
         this.relogio = relogio;
+        this.calendario = calendario;
     }
 
     LocalDateTime agora() {
@@ -79,7 +88,9 @@ class ReservaTransacoes {
     @Transactional
     ReservaVisao criar(NovaReserva pedido, UsuarioAutenticado ator) {
         PeriodoReserva periodo = Periodos.futuro(pedido.inicio(), pedido.fim(), agora());
+        calendario.garantirDiasLetivos(periodo);
         List<Recurso> travados = travar(pedido.recursoIds());
+        garantirComposicao(travados);
         boolean exigeAprovacao = travados.stream().anyMatch(Recurso::isRestrito);
         exigirJustificativaSeRestrito(exigeAprovacao, pedido.justificativa());
         disponibilidade.garantirLivre(travados, periodo, null, false);
@@ -176,6 +187,7 @@ class ReservaTransacoes {
         }
         exigirNaoIniciada(reserva, "Só é possível alterar reservas solicitadas ou aprovadas que ainda não começaram.");
         PeriodoReserva novo = Periodos.futuro(dados.inicio(), dados.fim(), agora());
+        calendario.garantirDiasLetivos(novo);
         List<Ocupacao> ocupacoesDaReserva = ocupacoes.daReserva(id);
         List<Recurso> travados = travar(ocupacoesDaReserva.stream().map(o -> o.getRecurso().getId()).toList());
         boolean exigeAprovacao = travados.stream().anyMatch(Recurso::isRestrito);
@@ -341,6 +353,20 @@ class ReservaTransacoes {
             throw new NaoEncontradoException("Um ou mais recursos informados não existem.");
         }
         return travados;
+    }
+
+    /** RN-032: uma reserva atende a uma atividade; não pode prender o catálogo inteiro. */
+    static void garantirComposicao(List<Recurso> lista) {
+        Map<TipoRecurso, Long> porTipo = lista.stream()
+                .collect(Collectors.groupingBy(Recurso::getTipo, Collectors.counting()));
+        long salas = porTipo.getOrDefault(TipoRecurso.SALA, 0L);
+        long professores = porTipo.getOrDefault(TipoRecurso.PROFESSOR, 0L);
+        long itens = porTipo.getOrDefault(TipoRecurso.MATERIAL, 0L) + porTipo.getOrDefault(TipoRecurso.EQUIPAMENTO, 0L);
+        if (salas > MAX_SALAS || professores > MAX_PROFESSORES || itens > MAX_ITENS) {
+            throw new EntradaInvalidaException("Cada reserva pode ter no máximo " + MAX_SALAS + " sala, "
+                    + MAX_PROFESSORES + " professor e " + MAX_ITENS
+                    + " itens entre materiais e equipamentos. Divida o pedido em reservas separadas.");
+        }
     }
 
     static void exigirJustificativaSeRestrito(boolean restrito, String justificativa) {
