@@ -28,14 +28,14 @@ class UsuariosIniciais implements ApplicationRunner {
             new Inicial("solicitante", "Marina Costa", "marina@sor.local", Perfil.SOLICITANTE),
             new Inicial("solicitante2", "Paulo Mendes", "paulo@sor.local", Perfil.SOLICITANTE));
 
-    private final UsuarioRepository usuarios;
+    private final UsuarioRepository repositorio;
     private final PasswordEncoder codificador;
     private final Clock relogio;
     private final String segredoInicial;
 
-    UsuariosIniciais(UsuarioRepository usuarios, PasswordEncoder codificador, Clock relogio,
+    UsuariosIniciais(UsuarioRepository repositorio, PasswordEncoder codificador, Clock relogio,
             @Value("${sor.usuarios-iniciais.segredo}") String segredoInicial) {
-        this.usuarios = usuarios;
+        this.repositorio = repositorio;
         this.codificador = codificador;
         this.relogio = relogio;
         this.segredoInicial = segredoInicial;
@@ -45,8 +45,8 @@ class UsuariosIniciais implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         for (Inicial u : USUARIOS) {
-            if (!usuarios.existsByUsername(u.login())) {
-                usuarios.save(new Usuario(u.login(), u.nome(), u.email(), codificador.encode(segredoInicial), u.perfil(),
+            if (!repositorio.existsByUsername(u.login())) {
+                repositorio.save(new Usuario(u.login(), u.nome(), u.email(), codificador.encode(segredoInicial), u.perfil(),
                         LocalDateTime.now(relogio)));
             }
         }
