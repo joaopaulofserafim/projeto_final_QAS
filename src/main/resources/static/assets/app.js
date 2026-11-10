@@ -293,8 +293,10 @@
 
   async function pesquisar() {
     const filtros = new URLSearchParams();
-    const campos = { tipo: '#busca-tipo', texto: '#busca-texto', capacidadeMinima: '#busca-capacidade',
-      localizacao: '#busca-localizacao', competencia: '#busca-competencia' };
+    const campos = {
+      tipo: '#busca-tipo', texto: '#busca-texto', capacidadeMinima: '#busca-capacidade',
+      localizacao: '#busca-localizacao', competencia: '#busca-competencia'
+    };
     Object.entries(campos).forEach(([chave, seletor]) => { if ($(seletor).value) filtros.set(chave, $(seletor).value); });
     const inicio = paraApi($('#busca-inicio').value);
     const fim = paraApi($('#busca-fim').value);
@@ -370,10 +372,12 @@
     const reservas = await api('GET', '/api/v1/reservas/minhas');
     $('#lista-minhas').innerHTML = reservas.length === 0
       ? vazio('Você ainda não tem reservas. Escolha um recurso em <strong>Reservar</strong>.')
-      : reservas.map((r) => cartaoReserva(r, { acoes:
+      : reservas.map((r) => cartaoReserva(r, {
+        acoes:
           (['SOLICITADA', 'APROVADA'].includes(r.estado)
             ? `<button class="btn btn-perigo btn-pequeno" data-acao="cancelar" data-id="${r.id}">Cancelar</button>` : '')
-          + `<button class="btn btn-suave btn-pequeno" data-acao="historico" data-id="${r.id}">Histórico</button>` })).join('');
+          + `<button class="btn btn-suave btn-pequeno" data-acao="historico" data-id="${r.id}">Histórico</button>`
+      })).join('');
   }
 
   $('#lista-minhas').addEventListener('click', (evento) => {
@@ -411,15 +415,19 @@
     ]);
     $('#lista-fila').innerHTML = fila.length === 0
       ? vazio('Nenhuma solicitação aguardando decisão.')
-      : fila.map((r) => cartaoReserva(r, { decisao: DECISAO.replace('data-acao="aprovar"', `data-acao="aprovar" data-id="${r.id}"`)
-          .replace('data-acao="rejeitar"', `data-acao="rejeitar" data-id="${r.id}"`) })).join('');
+      : fila.map((r) => cartaoReserva(r, {
+        decisao: DECISAO.replace('data-acao="aprovar"', `data-acao="aprovar" data-id="${r.id}"`)
+          .replace('data-acao="rejeitar"', `data-acao="rejeitar" data-id="${r.id}"`)
+      })).join('');
     const uso = aprovadas.concat(emUso);
     $('#lista-uso').innerHTML = uso.length === 0
       ? vazio('Nenhuma reserva aprovada ou em uso.')
-      : uso.map((r) => cartaoReserva(r, { acoes: r.estado === 'APROVADA'
+      : uso.map((r) => cartaoReserva(r, {
+        acoes: r.estado === 'APROVADA'
           ? `<button class="btn btn-suave btn-pequeno" data-acao="iniciar" data-id="${r.id}">Iniciar uso</button>
              <button class="btn btn-perigo btn-pequeno" data-acao="nao-comparecimento" data-id="${r.id}">Não compareceu</button>`
-          : `<button class="btn btn-suave btn-pequeno" data-acao="concluir" data-id="${r.id}">Concluir</button>` })).join('');
+          : `<button class="btn btn-suave btn-pequeno" data-acao="concluir" data-id="${r.id}">Concluir</button>`
+      })).join('');
   }
 
   $('#aba-aprovacoes').addEventListener('click', (evento) => {

@@ -1,295 +1,856 @@
 <!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#1f56b3">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#1f56b3" />
     <title>Portal de Recursos</title>
-    <link rel="stylesheet" href="/webjars/bootstrap/5.3.8/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/app.css">
-</head>
-<body>
-<!-- Ícones (SVG embutido: a CSP só permite recursos do próprio site) -->
-<svg xmlns="http://www.w3.org/2000/svg" class="d-none" aria-hidden="true">
-    <defs>
-        <symbol id="i-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M8 2.5v3M16 2.5v3M3 9.5h18M9 15l2.2 2.2L15.5 13"/></symbol>
-        <symbol id="i-busca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
-        <symbol id="i-agenda" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M8 2.5v3M16 2.5v3M3 9.5h18M8 14h3M13 14h3M8 17.5h3"/></symbol>
-        <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></symbol>
-        <symbol id="i-caixa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/></symbol>
-        <symbol id="i-painel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="9" rx="2.5"/><rect x="13.5" y="3" width="7.5" height="5" rx="2.5"/><rect x="13.5" y="11" width="7.5" height="10" rx="2.5"/><rect x="3" y="15" width="7.5" height="6" rx="2.5"/></symbol>
-        <symbol id="i-sino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></symbol>
-        <symbol id="i-sair" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3M16 17l5-5-5-5M21 12H9"/></symbol>
-        <symbol id="i-sala" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v15M16 9h2a2 2 0 0 1 2 2v10M2.5 21h19M8 8.5h4M8 12.5h4"/></symbol>
-        <symbol id="i-professor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6"/></symbol>
-        <symbol id="i-material" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5 17.5 3.5l3 3-3 3M3 21l1-4L16 5l3 3L7 20z"/></symbol>
-        <symbol id="i-equipamento" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2.5"/><path d="M8 20h8M12 16v4"/></symbol>
-        <symbol id="i-pessoas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.9.7 3.2 2.4 3.5 5.2"/></symbol>
-        <symbol id="i-local" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
-        <symbol id="i-relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
-        <symbol id="i-escudo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.1 8.2 7.5 9.5 4.4-1.3 7.5-4.9 7.5-9.5V6z"/><path d="m9 12 2.2 2.2L15 10.5"/></symbol>
-        <symbol id="i-raio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></symbol>
-        <symbol id="i-vazio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="4"/><path d="M8 2.5v3M16 2.5v3M3 9.5h18M9 15.5h6"/></symbol>
-    </defs>
-</svg>
+    <link
+      rel="stylesheet"
+      href="/webjars/bootstrap/5.3.8/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="/assets/app.css" />
+  </head>
+  <body>
+    <!-- Ícones (SVG embutido: a CSP só permite recursos do próprio site) -->
+    <svg xmlns="http://www.w3.org/2000/svg" class="d-none" aria-hidden="true">
+      <defs>
+        <symbol
+          id="i-logo"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="17" rx="4" />
+          <path d="M8 2.5v3M16 2.5v3M3 9.5h18M9 15l2.2 2.2L15.5 13" />
+        </symbol>
+        <symbol
+          id="i-busca"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </symbol>
+        <symbol
+          id="i-agenda"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="17" rx="4" />
+          <path d="M8 2.5v3M16 2.5v3M3 9.5h18M8 14h3M13 14h3M8 17.5h3" />
+        </symbol>
+        <symbol
+          id="i-check"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="m8.5 12.5 2.5 2.5 4.5-5" />
+        </symbol>
+        <symbol
+          id="i-caixa"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M21 8 12 3 3 8v8l9 5 9-5z" />
+          <path d="m3 8 9 5 9-5M12 13v8" />
+        </symbol>
+        <symbol
+          id="i-painel"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="3" width="7.5" height="9" rx="2.5" />
+          <rect x="13.5" y="3" width="7.5" height="5" rx="2.5" />
+          <rect x="13.5" y="11" width="7.5" height="10" rx="2.5" />
+          <rect x="3" y="15" width="7.5" height="6" rx="2.5" />
+        </symbol>
+        <symbol
+          id="i-sino"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9" />
+          <path d="M10 20a2.2 2.2 0 0 0 4 0" />
+        </symbol>
+        <symbol
+          id="i-sair"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3M16 17l5-5-5-5M21 12H9"
+          />
+        </symbol>
+        <symbol
+          id="i-sala"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M4 21V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v15M16 9h2a2 2 0 0 1 2 2v10M2.5 21h19M8 8.5h4M8 12.5h4"
+          />
+        </symbol>
+        <symbol
+          id="i-professor"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4.5 20.5c.8-3.8 3.8-6 7.5-6s6.7 2.2 7.5 6" />
+        </symbol>
+        <symbol
+          id="i-material"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M14.5 6.5 17.5 3.5l3 3-3 3M3 21l1-4L16 5l3 3L7 20z" />
+        </symbol>
+        <symbol
+          id="i-equipamento"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="12" rx="2.5" />
+          <path d="M8 20h8M12 16v4" />
+        </symbol>
+        <symbol
+          id="i-pessoas"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="9" cy="8" r="3.5" />
+          <path
+            d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.9 2.1 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18 14.8c1.9.7 3.2 2.4 3.5 5.2"
+          />
+        </symbol>
+        <symbol
+          id="i-local"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M12 21s7-6.2 7-11.5a7 7 0 1 0-14 0C5 14.8 12 21 12 21" />
+          <circle cx="12" cy="9.5" r="2.5" />
+        </symbol>
+        <symbol
+          id="i-relogio"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 7v5l3 2" />
+        </symbol>
+        <symbol
+          id="i-escudo"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M12 3 4.5 6v5.5c0 4.6 3.1 8.2 7.5 9.5 4.4-1.3 7.5-4.9 7.5-9.5V6z"
+          />
+          <path d="m9 12 2.2 2.2L15 10.5" />
+        </symbol>
+        <symbol
+          id="i-raio"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
+        </symbol>
+        <symbol
+          id="i-vazio"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="17" rx="4" />
+          <path d="M8 2.5v3M16 2.5v3M3 9.5h18M9 15.5h6" />
+        </symbol>
+      </defs>
+    </svg>
 
-<div id="mensagem" class="toast-sor d-none" role="status" aria-live="polite" data-testid="mensagem"></div>
+    <div
+      id="mensagem"
+      class="toast-sor d-none"
+      role="status"
+      aria-live="polite"
+      data-testid="mensagem"
+    ></div>
 
-<!-- ============================== Entrada ============================== -->
-<section id="tela-login" class="login d-none" aria-labelledby="titulo-login">
-    <div class="login-hero">
+    <!-- ============================== Entrada ============================== -->
+    <section
+      id="tela-login"
+      class="login d-none"
+      aria-labelledby="titulo-login"
+    >
+      <div class="login-hero">
         <div class="brand brand-claro">
-            <span class="brand-marca"><svg class="ic"><use href="#i-logo"/></svg></span>
-            <span><strong>Portal de Recursos</strong><small>Organização acadêmica</small></span>
+          <span class="brand-marca"
+            ><svg class="ic"><use href="#i-logo" /></svg
+          ></span>
+          <span
+            ><strong>Portal de Recursos</strong
+            ><small>Organização acadêmica</small></span
+          >
         </div>
         <div class="login-hero-texto">
-            <h2>Reserve salas, professores e equipamentos <em>sem choque de horário.</em></h2>
-            <p>Consulte a disponibilidade na hora, peça aprovação quando o recurso exigir e acompanhe cada reserva do pedido à conclusão.</p>
-            <ul class="login-pontos">
-                <li><svg class="ic"><use href="#i-raio"/></svg>Recursos comuns são confirmados na hora</li>
-                <li><svg class="ic"><use href="#i-escudo"/></svg>Dois pedidos para o mesmo horário nunca viram duas reservas</li>
-                <li><svg class="ic"><use href="#i-agenda"/></svg>Cada mudança fica registrada no histórico</li>
-            </ul>
+          <h2>
+            Reserve salas, professores e equipamentos
+            <em>sem choque de horário.</em>
+          </h2>
+          <p>
+            Consulte a disponibilidade na hora, peça aprovação quando o recurso
+            exigir e acompanhe cada reserva do pedido à conclusão.
+          </p>
+          <ul class="login-pontos">
+            <li>
+              <svg class="ic"><use href="#i-raio" /></svg>Recursos comuns são
+              confirmados na hora
+            </li>
+            <li>
+              <svg class="ic"><use href="#i-escudo" /></svg>Dois pedidos para o
+              mesmo horário nunca viram duas reservas
+            </li>
+            <li>
+              <svg class="ic"><use href="#i-agenda" /></svg>Cada mudança fica
+              registrada no histórico
+            </li>
+          </ul>
         </div>
-    </div>
-    <div class="login-painel">
+      </div>
+      <div class="login-painel">
         <div class="login-cartao">
-            <h1 id="titulo-login">Entrar</h1>
-            <p class="texto-suave">Use seu usuário institucional para continuar.</p>
-            <form id="form-login" novalidate>
-                <div class="campo">
-                    <label for="login-usuario">Usuário</label>
-                    <input id="login-usuario" name="username" class="form-control" autocomplete="username" placeholder="ex.: solicitante" required>
-                </div>
-                <div class="campo">
-                    <label for="login-senha">Senha</label>
-                    <input id="login-senha" name="password" type="password" class="form-control" autocomplete="current-password" placeholder="Sua senha" required>
-                </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100" data-testid="entrar">Entrar</button>
-            </form>
-            <p class="texto-suave login-dica">Ambiente de demonstração: <code>solicitante</code>, <code>responsavel</code> ou <code>admin</code>.</p>
+          <h1 id="titulo-login">Entrar</h1>
+          <p class="texto-suave">
+            Use seu usuário institucional para continuar.
+          </p>
+          <form id="form-login" novalidate>
+            <div class="campo">
+              <label for="login-usuario">Usuário</label>
+              <input
+                id="login-usuario"
+                name="username"
+                class="form-control"
+                autocomplete="username"
+                placeholder="ex.: solicitante"
+                required
+              />
+            </div>
+            <div class="campo">
+              <label for="login-senha">Senha</label>
+              <input
+                id="login-senha"
+                name="password"
+                type="password"
+                class="form-control"
+                autocomplete="current-password"
+                placeholder="Sua senha"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg w-100"
+              data-testid="entrar"
+            >
+              Entrar
+            </button>
+          </form>
+          <p class="texto-suave login-dica">
+            Ambiente de demonstração: <code>solicitante</code>,
+            <code>responsavel</code> ou <code>admin</code>.
+          </p>
         </div>
-    </div>
-</section>
+      </div>
+    </section>
 
-<!-- ============================== Aplicação ============================== -->
-<div id="tela-app" class="shell d-none">
-    <aside class="lateral">
+    <!-- ============================== Aplicação ============================== -->
+    <div id="tela-app" class="shell d-none">
+      <aside class="lateral">
         <div class="brand">
-            <span class="brand-marca"><svg class="ic"><use href="#i-logo"/></svg></span>
-            <span><strong>Portal de Recursos</strong><small>Organização acadêmica</small></span>
+          <span class="brand-marca"
+            ><svg class="ic"><use href="#i-logo" /></svg
+          ></span>
+          <span
+            ><strong>Portal de Recursos</strong
+            ><small>Organização acadêmica</small></span
+          >
         </div>
         <nav aria-label="Seções">
-            <ul class="menu" id="abas">
-                <li><button class="menu-item" data-aba="reservar" type="button"><svg class="ic"><use href="#i-busca"/></svg><span>Reservar</span></button></li>
-                <li><button class="menu-item" data-aba="minhas" data-perfis="SOLICITANTE" type="button"><svg class="ic"><use href="#i-agenda"/></svg><span>Minhas reservas</span></button></li>
-                <li><button class="menu-item" data-aba="aprovacoes" data-perfis="RESPONSAVEL" type="button"><svg class="ic"><use href="#i-check"/></svg><span>Aprovações e uso</span></button></li>
-                <li><button class="menu-item" data-aba="movimentacoes" data-perfis="RESPONSAVEL" type="button"><svg class="ic"><use href="#i-caixa"/></svg><span>Retiradas</span></button></li>
-                <li><button class="menu-item" data-aba="admin" data-perfis="ADMINISTRADOR" type="button"><svg class="ic"><use href="#i-painel"/></svg><span>Administração</span></button></li>
-                <li><button class="menu-item" data-aba="notificacoes" type="button"><svg class="ic"><use href="#i-sino"/></svg><span>Avisos</span></button></li>
-            </ul>
+          <ul class="menu" id="abas">
+            <li>
+              <button class="menu-item" data-aba="reservar" type="button">
+                <svg class="ic"><use href="#i-busca" /></svg
+                ><span>Reservar</span>
+              </button>
+            </li>
+            <li>
+              <button
+                class="menu-item"
+                data-aba="minhas"
+                data-perfis="SOLICITANTE"
+                type="button"
+              >
+                <svg class="ic"><use href="#i-agenda" /></svg
+                ><span>Minhas reservas</span>
+              </button>
+            </li>
+            <li>
+              <button
+                class="menu-item"
+                data-aba="aprovacoes"
+                data-perfis="RESPONSAVEL"
+                type="button"
+              >
+                <svg class="ic"><use href="#i-check" /></svg
+                ><span>Aprovações e uso</span>
+              </button>
+            </li>
+            <li>
+              <button
+                class="menu-item"
+                data-aba="movimentacoes"
+                data-perfis="RESPONSAVEL"
+                type="button"
+              >
+                <svg class="ic"><use href="#i-caixa" /></svg
+                ><span>Retiradas</span>
+              </button>
+            </li>
+            <li>
+              <button
+                class="menu-item"
+                data-aba="admin"
+                data-perfis="ADMINISTRADOR"
+                type="button"
+              >
+                <svg class="ic"><use href="#i-painel" /></svg
+                ><span>Administração</span>
+              </button>
+            </li>
+            <li>
+              <button class="menu-item" data-aba="notificacoes" type="button">
+                <svg class="ic"><use href="#i-sino" /></svg><span>Avisos</span>
+              </button>
+            </li>
+          </ul>
         </nav>
         <div class="lateral-rodape">
-            <a href="/swagger-ui.html" target="_blank" rel="noopener" class="link-suave">Documentação da API</a>
+          <a
+            href="/swagger-ui.html"
+            target="_blank"
+            rel="noopener"
+            class="link-suave"
+            >Documentação da API</a
+          >
         </div>
-    </aside>
+      </aside>
 
-    <div class="conteudo">
+      <div class="conteudo">
         <header class="topo">
-            <div>
-                <p class="topo-saudacao" id="saudacao">Olá!</p>
-                <h1 class="topo-titulo" id="titulo-pagina">Reservar</h1>
-            </div>
-            <div class="topo-usuario">
-                <span class="avatar" id="avatar" aria-hidden="true">?</span>
-                <span class="topo-usuario-texto"><strong id="usuario-atual" data-testid="usuario-atual"></strong><small id="perfil-atual"></small></span>
-                <button id="botao-sair" type="button" class="btn btn-icone" title="Sair" aria-label="Sair"><svg class="ic"><use href="#i-sair"/></svg><span class="d-none d-sm-inline">Sair</span></button>
-            </div>
+          <div>
+            <p class="topo-saudacao" id="saudacao">Olá!</p>
+            <h1 class="topo-titulo" id="titulo-pagina">Reservar</h1>
+          </div>
+          <div class="topo-usuario">
+            <span class="avatar" id="avatar" aria-hidden="true">?</span>
+            <span class="topo-usuario-texto"
+              ><strong id="usuario-atual" data-testid="usuario-atual"></strong
+              ><small id="perfil-atual"></small
+            ></span>
+            <button
+              id="botao-sair"
+              type="button"
+              class="btn btn-icone"
+              title="Sair"
+              aria-label="Sair"
+            >
+              <svg class="ic"><use href="#i-sair" /></svg
+              ><span class="d-none d-sm-inline">Sair</span>
+            </button>
+          </div>
         </header>
 
         <main class="pagina">
-            <!-- Reservar -->
-            <section id="aba-reservar" class="aba" aria-label="Reservar">
-                <div class="grade-reservar">
-                    <div class="coluna-principal">
-                        <form id="form-busca" class="cartao filtros">
-                            <div class="filtros-linha">
-                                <div class="campo">
-                                    <label for="busca-tipo">Tipo</label>
-                                    <select id="busca-tipo" class="form-select">
-                                        <option value="">Todos</option>
-                                        <option value="SALA">Sala</option>
-                                        <option value="PROFESSOR">Professor</option>
-                                        <option value="MATERIAL">Material</option>
-                                        <option value="EQUIPAMENTO">Equipamento</option>
-                                    </select>
-                                </div>
-                                <div class="campo campo-grande">
-                                    <label for="busca-texto">Nome ou código</label>
-                                    <input id="busca-texto" class="form-control" placeholder="Buscar recurso">
-                                </div>
-                                <div class="campo">
-                                    <label for="busca-capacidade">Capacidade mín.</label>
-                                    <input id="busca-capacidade" type="number" min="1" class="form-control" placeholder="Ex.: 30">
-                                </div>
-                                <div class="campo">
-                                    <label for="busca-localizacao">Localização</label>
-                                    <input id="busca-localizacao" class="form-control" placeholder="Ex.: Bloco A">
-                                </div>
-                                <div class="campo">
-                                    <label for="busca-competencia">Competência</label>
-                                    <input id="busca-competencia" class="form-control" placeholder="Ex.: Java">
-                                </div>
-                            </div>
-                            <div class="filtros-linha filtros-quando">
-                                <div class="campo">
-                                    <label for="busca-inicio">Início</label>
-                                    <input id="busca-inicio" type="datetime-local" class="form-control">
-                                </div>
-                                <div class="campo">
-                                    <label for="busca-fim">Término</label>
-                                    <input id="busca-fim" type="datetime-local" class="form-control">
-                                </div>
-                                <div class="atalhos" role="group" aria-label="Atalhos de horário">
-                                    <button type="button" class="chip-botao" data-preset="manha">Amanhã de manhã</button>
-                                    <button type="button" class="chip-botao" data-preset="tarde">Amanhã à tarde</button>
-                                </div>
-                            </div>
-                            <div class="filtros-acoes">
-                                <label class="check-suave" for="busca-livres">
-                                    <input id="busca-livres" type="checkbox" class="form-check-input"> Mostrar só os livres no período
-                                </label>
-                                <button type="submit" class="btn btn-primary" data-testid="pesquisar"><svg class="ic"><use href="#i-busca"/></svg>Pesquisar</button>
-                            </div>
-                        </form>
-
-                        <div id="grade-recursos" class="grade-recursos" data-testid="grade-recursos">
-                            <div class="vazio"><svg class="ic ic-xl"><use href="#i-vazio"/></svg><p>Use os filtros e toque em <strong>Pesquisar</strong> para ver os recursos.</p></div>
-                        </div>
+          <!-- Reservar -->
+          <section id="aba-reservar" class="aba" aria-label="Reservar">
+            <div class="grade-reservar">
+              <div class="coluna-principal">
+                <form id="form-busca" class="cartao filtros">
+                  <div class="filtros-linha">
+                    <div class="campo">
+                      <label for="busca-tipo">Tipo</label>
+                      <select id="busca-tipo" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="SALA">Sala</option>
+                        <option value="PROFESSOR">Professor</option>
+                        <option value="MATERIAL">Material</option>
+                        <option value="EQUIPAMENTO">Equipamento</option>
+                      </select>
                     </div>
-
-                    <aside class="coluna-lateral">
-                        <form id="form-reserva" class="cartao painel-reserva">
-                            <h2>Sua reserva</h2>
-                            <p class="texto-suave" id="resumo-periodo">Escolha o período e marque os recursos desejados.</p>
-                            <div id="escolhidos" class="escolhidos"><span class="texto-suave">Nenhum recurso escolhido.</span></div>
-                            <div class="campo">
-                                <label for="reserva-finalidade">Finalidade</label>
-                                <input id="reserva-finalidade" class="form-control" maxlength="300" placeholder="Ex.: Aula de Qualidade de Software">
-                            </div>
-                            <div class="campo">
-                                <label for="reserva-justificativa">Justificativa <small>(obrigatória para recurso restrito)</small></label>
-                                <input id="reserva-justificativa" class="form-control" maxlength="500" placeholder="Por que precisa deste recurso?">
-                            </div>
-                            <div class="painel-reserva-acoes">
-                                <button type="button" id="botao-disponibilidade" class="btn btn-suave">Verificar disponibilidade</button>
-                                <button type="submit" id="botao-reservar" class="btn btn-primary" data-perfis="SOLICITANTE" data-testid="solicitar-reserva">Solicitar reserva</button>
-                            </div>
-                        </form>
-                    </aside>
-                </div>
-            </section>
-
-            <!-- Minhas reservas -->
-            <section id="aba-minhas" class="aba d-none" aria-label="Minhas reservas">
-                <div id="lista-minhas" class="lista-cartoes" data-testid="lista-minhas"></div>
-                <div id="historico" class="cartao d-none" aria-live="polite"></div>
-            </section>
-
-            <!-- Aprovações e uso -->
-            <section id="aba-aprovacoes" class="aba d-none" aria-label="Aprovações e uso">
-                <h2 class="secao-titulo">Aguardando decisão</h2>
-                <div id="lista-fila" class="lista-cartoes"></div>
-                <h2 class="secao-titulo">Aprovadas e em uso</h2>
-                <div id="lista-uso" class="lista-cartoes"></div>
-            </section>
-
-            <!-- Retiradas -->
-            <section id="aba-movimentacoes" class="aba d-none" aria-label="Retiradas e devoluções">
-                <form id="form-retirada" class="cartao">
-                    <h2 class="cartao-titulo">Registrar retirada</h2>
-                    <div class="form-linha">
-                        <div class="campo"><label for="retirada-reserva">Nº da reserva</label>
-                            <input id="retirada-reserva" type="number" min="1" class="form-control"></div>
-                        <div class="campo"><label for="retirada-recurso">Id do material</label>
-                            <input id="retirada-recurso" type="number" min="1" class="form-control"></div>
-                        <div class="campo campo-acao"><button type="submit" class="btn btn-primary">Registrar retirada</button></div>
+                    <div class="campo campo-grande">
+                      <label for="busca-texto">Nome ou código</label>
+                      <input
+                        id="busca-texto"
+                        class="form-control"
+                        placeholder="Buscar recurso"
+                      />
                     </div>
-                </form>
-                <h2 class="secao-titulo">Pendentes de devolução</h2>
-                <div id="lista-movimentacoes" class="lista-cartoes"></div>
-            </section>
-
-            <!-- Administração -->
-            <section id="aba-admin" class="aba d-none" aria-label="Administração">
-                <div id="painel-resumo" class="indicadores" data-testid="painel-resumo"></div>
-
-                <div class="grade-admin">
-                    <form id="form-recurso" class="cartao">
-                        <h2 class="cartao-titulo">Cadastrar recurso</h2>
-                        <div class="form-linha">
-                            <div class="campo"><label for="recurso-codigo">Código</label><input id="recurso-codigo" class="form-control"></div>
-                            <div class="campo campo-grande"><label for="recurso-nome">Nome</label><input id="recurso-nome" class="form-control"></div>
-                            <div class="campo"><label for="recurso-tipo">Tipo</label>
-                                <select id="recurso-tipo" class="form-select">
-                                    <option value="SALA">Sala</option><option value="PROFESSOR">Professor</option>
-                                    <option value="MATERIAL">Material</option><option value="EQUIPAMENTO">Equipamento</option>
-                                </select></div>
-                            <div class="campo"><label for="recurso-capacidade">Capacidade</label><input id="recurso-capacidade" type="number" min="1" class="form-control"></div>
-                            <div class="campo"><label for="recurso-localizacao">Localização</label><input id="recurso-localizacao" class="form-control"></div>
-                            <div class="campo campo-grande"><label for="recurso-competencias">Competências (separadas por vírgula)</label><input id="recurso-competencias" class="form-control"></div>
-                        </div>
-                        <div class="filtros-acoes">
-                            <label class="check-suave" for="recurso-restrito"><input id="recurso-restrito" type="checkbox" class="form-check-input"> Exige aprovação</label>
-                            <button type="submit" class="btn btn-primary">Cadastrar</button>
-                        </div>
-                    </form>
-
-                    <form id="form-manutencao" class="cartao">
-                        <h2 class="cartao-titulo">Bloquear para manutenção</h2>
-                        <div class="form-linha">
-                            <div class="campo"><label for="manutencao-recurso">Id do recurso</label><input id="manutencao-recurso" type="number" min="1" class="form-control"></div>
-                            <div class="campo"><label for="manutencao-inicio">Início</label><input id="manutencao-inicio" type="datetime-local" class="form-control"></div>
-                            <div class="campo"><label for="manutencao-fim">Término</label><input id="manutencao-fim" type="datetime-local" class="form-control"></div>
-                            <div class="campo campo-grande"><label for="manutencao-motivo">Motivo</label><input id="manutencao-motivo" class="form-control"></div>
-                        </div>
-                        <div class="filtros-acoes"><span></span><button type="submit" class="btn btn-aviso">Bloquear</button></div>
-                    </form>
-                </div>
-
-                <form id="form-relatorio" class="cartao">
-                    <h2 class="cartao-titulo">Relatórios</h2>
-                    <div class="form-linha">
-                        <div class="campo"><label for="relatorio-inicio">De</label><input id="relatorio-inicio" type="datetime-local" class="form-control"></div>
-                        <div class="campo"><label for="relatorio-fim">Até</label><input id="relatorio-fim" type="datetime-local" class="form-control"></div>
-                        <div class="campo campo-acao"><button type="submit" class="btn btn-primary">Gerar</button></div>
+                    <div class="campo">
+                      <label for="busca-capacidade">Capacidade mín.</label>
+                      <input
+                        id="busca-capacidade"
+                        type="number"
+                        min="1"
+                        class="form-control"
+                        placeholder="Ex.: 30"
+                      />
                     </div>
-                    <p id="relatorio-criterio" class="texto-suave pequeno"></p>
-                    <div class="tabela-rolavel">
-                        <table class="tabela" id="tabela-relatorio">
-                            <thead><tr><th>Recurso</th><th>Tipo</th><th>Reservas</th><th>Horas</th><th>Ocupação</th></tr></thead>
-                            <tbody></tbody>
-                        </table>
+                    <div class="campo">
+                      <label for="busca-localizacao">Localização</label>
+                      <input
+                        id="busca-localizacao"
+                        class="form-control"
+                        placeholder="Ex.: Bloco A"
+                      />
                     </div>
-                    <p id="relatorio-conflitos" class="relatorio-conflitos"></p>
+                    <div class="campo">
+                      <label for="busca-competencia">Competência</label>
+                      <input
+                        id="busca-competencia"
+                        class="form-control"
+                        placeholder="Ex.: Java"
+                      />
+                    </div>
+                  </div>
+                  <div class="filtros-linha filtros-quando">
+                    <div class="campo">
+                      <label for="busca-inicio">Início</label>
+                      <input
+                        id="busca-inicio"
+                        type="datetime-local"
+                        class="form-control"
+                      />
+                    </div>
+                    <div class="campo">
+                      <label for="busca-fim">Término</label>
+                      <input
+                        id="busca-fim"
+                        type="datetime-local"
+                        class="form-control"
+                      />
+                    </div>
+                    <div
+                      class="atalhos"
+                      role="group"
+                      aria-label="Atalhos de horário"
+                    >
+                      <button
+                        type="button"
+                        class="chip-botao"
+                        data-preset="manha"
+                      >
+                        Amanhã de manhã
+                      </button>
+                      <button
+                        type="button"
+                        class="chip-botao"
+                        data-preset="tarde"
+                      >
+                        Amanhã à tarde
+                      </button>
+                    </div>
+                  </div>
+                  <div class="filtros-acoes">
+                    <label class="check-suave" for="busca-livres">
+                      <input
+                        id="busca-livres"
+                        type="checkbox"
+                        class="form-check-input"
+                      />
+                      Mostrar só os livres no período
+                    </label>
+                    <button
+                      type="submit"
+                      class="btn btn-primary"
+                      data-testid="pesquisar"
+                    >
+                      <svg class="ic"><use href="#i-busca" /></svg>Pesquisar
+                    </button>
+                  </div>
                 </form>
 
-                <h2 class="secao-titulo">Auditoria recente</h2>
-                <div class="cartao tabela-rolavel">
-                    <table class="tabela pequeno" id="tabela-auditoria">
-                        <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Registro</th><th>Estado</th></tr></thead>
-                        <tbody></tbody>
-                    </table>
+                <div
+                  id="grade-recursos"
+                  class="grade-recursos"
+                  data-testid="grade-recursos"
+                >
+                  <div class="vazio">
+                    <svg class="ic ic-xl"><use href="#i-vazio" /></svg>
+                    <p>
+                      Use os filtros e toque em <strong>Pesquisar</strong> para
+                      ver os recursos.
+                    </p>
+                  </div>
                 </div>
-            </section>
+              </div>
 
-            <!-- Avisos -->
-            <section id="aba-notificacoes" class="aba d-none" aria-label="Avisos">
-                <div id="lista-notificacoes" class="lista-cartoes"></div>
-            </section>
+              <aside class="coluna-lateral">
+                <form id="form-reserva" class="cartao painel-reserva">
+                  <h2>Sua reserva</h2>
+                  <p class="texto-suave" id="resumo-periodo">
+                    Escolha o período e marque os recursos desejados.
+                  </p>
+                  <div id="escolhidos" class="escolhidos">
+                    <span class="texto-suave">Nenhum recurso escolhido.</span>
+                  </div>
+                  <div class="campo">
+                    <label for="reserva-finalidade">Finalidade</label>
+                    <input
+                      id="reserva-finalidade"
+                      class="form-control"
+                      maxlength="300"
+                      placeholder="Ex.: Aula de Qualidade de Software"
+                    />
+                  </div>
+                  <div class="campo">
+                    <label for="reserva-justificativa"
+                      >Justificativa
+                      <small>(obrigatória para recurso restrito)</small></label
+                    >
+                    <input
+                      id="reserva-justificativa"
+                      class="form-control"
+                      maxlength="500"
+                      placeholder="Por que precisa deste recurso?"
+                    />
+                  </div>
+                  <div class="painel-reserva-acoes">
+                    <button
+                      type="button"
+                      id="botao-disponibilidade"
+                      class="btn btn-suave"
+                    >
+                      Verificar disponibilidade
+                    </button>
+                    <button
+                      type="submit"
+                      id="botao-reservar"
+                      class="btn btn-primary"
+                      data-perfis="SOLICITANTE"
+                      data-testid="solicitar-reserva"
+                    >
+                      Solicitar reserva
+                    </button>
+                  </div>
+                </form>
+              </aside>
+            </div>
+          </section>
+
+          <!-- Minhas reservas -->
+          <section
+            id="aba-minhas"
+            class="aba d-none"
+            aria-label="Minhas reservas"
+          >
+            <div
+              id="lista-minhas"
+              class="lista-cartoes"
+              data-testid="lista-minhas"
+            ></div>
+            <div id="historico" class="cartao d-none" aria-live="polite"></div>
+          </section>
+
+          <!-- Aprovações e uso -->
+          <section
+            id="aba-aprovacoes"
+            class="aba d-none"
+            aria-label="Aprovações e uso"
+          >
+            <h2 class="secao-titulo">Aguardando decisão</h2>
+            <div id="lista-fila" class="lista-cartoes"></div>
+            <h2 class="secao-titulo">Aprovadas e em uso</h2>
+            <div id="lista-uso" class="lista-cartoes"></div>
+          </section>
+
+          <!-- Retiradas -->
+          <section
+            id="aba-movimentacoes"
+            class="aba d-none"
+            aria-label="Retiradas e devoluções"
+          >
+            <form id="form-retirada" class="cartao">
+              <h2 class="cartao-titulo">Registrar retirada</h2>
+              <div class="form-linha">
+                <div class="campo">
+                  <label for="retirada-reserva">Nº da reserva</label>
+                  <input
+                    id="retirada-reserva"
+                    type="number"
+                    min="1"
+                    class="form-control"
+                  />
+                </div>
+                <div class="campo">
+                  <label for="retirada-recurso">Id do material</label>
+                  <input
+                    id="retirada-recurso"
+                    type="number"
+                    min="1"
+                    class="form-control"
+                  />
+                </div>
+                <div class="campo campo-acao">
+                  <button type="submit" class="btn btn-primary">
+                    Registrar retirada
+                  </button>
+                </div>
+              </div>
+            </form>
+            <h2 class="secao-titulo">Pendentes de devolução</h2>
+            <div id="lista-movimentacoes" class="lista-cartoes"></div>
+          </section>
+
+          <!-- Administração -->
+          <section id="aba-admin" class="aba d-none" aria-label="Administração">
+            <div
+              id="painel-resumo"
+              class="indicadores"
+              data-testid="painel-resumo"
+            ></div>
+
+            <div class="grade-admin">
+              <form id="form-recurso" class="cartao">
+                <h2 class="cartao-titulo">Cadastrar recurso</h2>
+                <div class="form-linha">
+                  <div class="campo">
+                    <label for="recurso-codigo">Código</label
+                    ><input id="recurso-codigo" class="form-control" />
+                  </div>
+                  <div class="campo campo-grande">
+                    <label for="recurso-nome">Nome</label
+                    ><input id="recurso-nome" class="form-control" />
+                  </div>
+                  <div class="campo">
+                    <label for="recurso-tipo">Tipo</label>
+                    <select id="recurso-tipo" class="form-select">
+                      <option value="SALA">Sala</option>
+                      <option value="PROFESSOR">Professor</option>
+                      <option value="MATERIAL">Material</option>
+                      <option value="EQUIPAMENTO">Equipamento</option>
+                    </select>
+                  </div>
+                  <div class="campo">
+                    <label for="recurso-capacidade">Capacidade</label
+                    ><input
+                      id="recurso-capacidade"
+                      type="number"
+                      min="1"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="campo">
+                    <label for="recurso-localizacao">Localização</label
+                    ><input id="recurso-localizacao" class="form-control" />
+                  </div>
+                  <div class="campo campo-grande">
+                    <label for="recurso-competencias"
+                      >Competências (separadas por vírgula)</label
+                    ><input id="recurso-competencias" class="form-control" />
+                  </div>
+                </div>
+                <div class="filtros-acoes">
+                  <label class="check-suave" for="recurso-restrito"
+                    ><input
+                      id="recurso-restrito"
+                      type="checkbox"
+                      class="form-check-input"
+                    />
+                    Exige aprovação</label
+                  >
+                  <button type="submit" class="btn btn-primary">
+                    Cadastrar
+                  </button>
+                </div>
+              </form>
+
+              <form id="form-manutencao" class="cartao">
+                <h2 class="cartao-titulo">Bloquear para manutenção</h2>
+                <div class="form-linha">
+                  <div class="campo">
+                    <label for="manutencao-recurso">Id do recurso</label
+                    ><input
+                      id="manutencao-recurso"
+                      type="number"
+                      min="1"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="campo">
+                    <label for="manutencao-inicio">Início</label
+                    ><input
+                      id="manutencao-inicio"
+                      type="datetime-local"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="campo">
+                    <label for="manutencao-fim">Término</label
+                    ><input
+                      id="manutencao-fim"
+                      type="datetime-local"
+                      class="form-control"
+                    />
+                  </div>
+                  <div class="campo campo-grande">
+                    <label for="manutencao-motivo">Motivo</label
+                    ><input id="manutencao-motivo" class="form-control" />
+                  </div>
+                </div>
+                <div class="filtros-acoes">
+                  <span></span
+                  ><button type="submit" class="btn btn-aviso">Bloquear</button>
+                </div>
+              </form>
+            </div>
+
+            <form id="form-relatorio" class="cartao">
+              <h2 class="cartao-titulo">Relatórios</h2>
+              <div class="form-linha">
+                <div class="campo">
+                  <label for="relatorio-inicio">De</label
+                  ><input
+                    id="relatorio-inicio"
+                    type="datetime-local"
+                    class="form-control"
+                  />
+                </div>
+                <div class="campo">
+                  <label for="relatorio-fim">Até</label
+                  ><input
+                    id="relatorio-fim"
+                    type="datetime-local"
+                    class="form-control"
+                  />
+                </div>
+                <div class="campo campo-acao">
+                  <button type="submit" class="btn btn-primary">Gerar</button>
+                </div>
+              </div>
+              <p id="relatorio-criterio" class="texto-suave pequeno"></p>
+              <div class="tabela-rolavel">
+                <table class="tabela" id="tabela-relatorio">
+                  <thead>
+                    <tr>
+                      <th>Recurso</th>
+                      <th>Tipo</th>
+                      <th>Reservas</th>
+                      <th>Horas</th>
+                      <th>Ocupação</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+              <p id="relatorio-conflitos" class="relatorio-conflitos"></p>
+            </form>
+
+            <h2 class="secao-titulo">Auditoria recente</h2>
+            <div class="cartao tabela-rolavel">
+              <table class="tabela pequeno" id="tabela-auditoria">
+                <thead>
+                  <tr>
+                    <th>Quando</th>
+                    <th>Quem</th>
+                    <th>Ação</th>
+                    <th>Registro</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Avisos -->
+          <section id="aba-notificacoes" class="aba d-none" aria-label="Avisos">
+            <div id="lista-notificacoes" class="lista-cartoes"></div>
+          </section>
         </main>
+      </div>
     </div>
-</div>
-<script src="/assets/app.js"></script>
-</body>
+    <script src="/assets/app.js"></script>
+  </body>
 </html>
