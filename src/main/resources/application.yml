@@ -38,6 +38,9 @@ springdoc:
     path: /v3/api-docs
 
 sor:
+  usuarios-iniciais:
+    # Senha dos usuários de demonstração (admin, responsavel, solicitante, solicitante2). Defina SOR_SENHA_INICIAL em implantações reais.
+    segredo: ${SOR_SENHA_INICIAL:Senha@123}
   fuso-horario: America/Sao_Paulo
   notificacao:
     # simulado: registra a notificação sem chamar serviço externo

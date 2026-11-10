@@ -2,8 +2,8 @@ package br.edu.sor.relatorios;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 /** Regras puras dos relatórios (DP-010): horas dentro da janela e percentual com uma casa decimal. */
 final class CalculadoraHoras {
@@ -18,11 +18,11 @@ final class CalculadoraHoras {
         if (!ate.isAfter(de)) {
             return 0.0;
         }
-        return arredondar(Duration.between(de, ate).toMinutes() / 60.0, 2);
+        return arredondar(ChronoUnit.MINUTES.between(de, ate) / 60.0, 2);
     }
 
     static double horasDaJanela(LocalDateTime janelaInicio, LocalDateTime janelaFim) {
-        return Duration.between(janelaInicio, janelaFim).toMinutes() / 60.0;
+        return ChronoUnit.MINUTES.between(janelaInicio, janelaFim) / 60.0;
     }
 
     static double percentual(double horas, double total) {

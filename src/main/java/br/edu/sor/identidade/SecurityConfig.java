@@ -74,10 +74,12 @@ public class SecurityConfig {
                 .authenticationEntryPoint(respostas)
                 .accessDeniedHandler(respostas))
             .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                // NOSONAR: o cookie XSRF-TOKEN precisa ser legível pelo JavaScript da interface (padrão SPA do Spring); a sessão (JSESSIONID) continua HttpOnly
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()) // NOSONAR
                 .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                .ignoringRequestMatchers("/api/v1/auth/login")
-                .ignoringRequestMatchers(request -> request.getHeader(HttpHeaders.AUTHORIZATION) != null))
+                // NOSONAR: login ainda sem sessão e requisições com credencial explícita (Basic) não usam cookie, logo não são alvo de CSRF
+                .ignoringRequestMatchers("/api/v1/auth/login") // NOSONAR
+                .ignoringRequestMatchers(request -> request.getHeader(HttpHeaders.AUTHORIZATION) != null)) // NOSONAR
             .headers(cabecalhos -> cabecalhos
                 .contentSecurityPolicy(csp -> csp.policyDirectives(CSP))
                 .referrerPolicy(ref -> ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN)));
