@@ -2,7 +2,42 @@
 
 Este registro consolida ambiguidades das personas/jornadas e lacunas identificadas ao derivar RF/RN/RNF. Nenhum item abaixo foi resolvido por suposicao. A autoridade e o responsavel pela decisao de produto ainda precisam ser identificados. Prioridade indica urgencia para fechar especificacao, nao ordem tecnica de implementacao.
 
-**Status:** DP-001..DP-019 permanecem **PENDENTES**; esta modelagem não os resolve. Não foi identificada autoridade institucional nomeada nos documentos disponíveis. Alternativas abaixo são opções de decisão, não decisões tomadas.
+**Status (09/11/2026):** as 19 pendências receberam decisão. As recomendações da análise de 09/11/2026 foram **adotadas por instrução do responsável pelo produto** ("Faça o que falta") para permitir a entrega do Release Candidate. Decisões marcadas como **Negócio** continuam sujeitas a confirmação explícita do PO/professor; qualquer mudança deve gerar nova versão deste registro e ajuste dos testes indicados. A análise original (26/10/2026) foi preservada abaixo.
+
+## Registro de decisões — 09/11/2026
+
+| ID | Decisão adotada | Tipo | Onde está implementada / verificada |
+|---|---|---|---|
+| DP-001 | `SOLICITADA`, `APROVADA` e `EM_USO` **ocupam** o horário. A disputa é resolvida já na criação: a segunda solicitação simultânea recebe conflito. Rejeição, cancelamento, conclusão e não comparecimento liberam o horário. | Negócio | `EstadoReserva.ocupaHorario`; `ConcorrenciaReservaTest` |
+| DP-002 | Restrição é um atributo **por recurso** (`restrito`), definido pelo Administrador. Pedido com qualquer recurso restrito nasce `SOLICITADA` e exige justificativa; pedido só com recursos comuns nasce `APROVADA` (aprovação automática auditada). | Negócio | `ReservaService.criar`; `ReservaApiTest` |
+| DP-003 | Matriz por perfil + verificação de dono: Solicitante cria/altera/cancela só as próprias reservas; **somente Responsável aprova/rejeita**, inicia, conclui, registra não comparecimento e movimentações (escopo global no RC); Administrador gerencia cadastros, usuários, manutenção, auditoria e relatórios e pode cancelar reservas para resolver conflitos, mas **não aprova**. Escopo do Responsável por recurso fica como evolução. | Negócio + técnica | `SecurityConfig`; `SegurancaApiTest` (matriz) |
+| DP-004 | Manutenção que se sobrepõe a reserva ativa é **recusada (409)** com a lista das reservas em conflito; o Administrador resolve explicitamente (cancelamento auditado) antes de bloquear. Nenhum cancelamento automático. | Negócio | `ManutencaoService`; `ManutencaoApiTest` |
+| DP-005 | Nada é apagado: usuários e recursos são **desativados**. Recurso com reserva ativa futura não pode ser desativado. Código do recurso e login são únicos. | Negócio | `RecursoService.desativar`, `UsuarioService`; `RecursoApiTest`, `UsuarioApiTest` |
+| DP-006 | Somente o Responsável move `APROVADA → EM_USO` (ação "iniciar" ou registro de retirada de material) e `EM_USO → CONCLUIDA` (ação "concluir", bloqueada se houver material não devolvido; automática na última devolução quando a reserva só tem materiais/equipamentos). Novo estado **`NAO_COMPARECEU`**, exigido pelo enunciado: Responsável marca reserva `APROVADA` após o horário de início. | Negócio | `EstadoReserva`; `CicloDeVidaReservaTest`, `MovimentacaoApiTest` |
+| DP-007 | Alterar e cancelar só em `SOLICITADA`/`APROVADA` e **antes do início**. Alteração revalida conflitos; se houver recurso restrito, volta para `SOLICITADA`. Reserva iniciada nunca é cancelada nem apagada (não existe operação de exclusão). | Negócio | `ReservaService.alterar/cancelar`; `CicloDeVidaReservaTest` |
+| DP-008 | Retirada só de material/equipamento de reserva `APROVADA`/`EM_USO`, registrada pelo Responsável; um registro por item; prazo de devolução = término da reserva; atraso = devolução após o prazo (ou pendente após o prazo); avaria registrada na devolução. | Negócio | `MovimentacaoService`; `MovimentacaoApiTest` |
+| DP-009 | Notificação **simulada** por padrão (registrada e consultável) e **integração HTTP** opcional com API externa, enviada após o commit; falha não reverte a operação. WireMock simula o provedor nos testes. | Técnica | `NotificacaoService`; `NotificacaoWireMockTest` |
+| DP-010 | Utilização = horas de reservas `APROVADA`/`EM_USO`/`CONCLUIDA` dentro da janela; carga horária = mesma soma para recursos do tipo professor; conflitos evitados = tentativas recusadas por conflito registradas em `conflito_evitado` (por data da tentativa). | Negócio | `RelatorioService`; `RelatorioApiTest`, `CalculadoraHorasTest` |
+| DP-011 | Auditoria append-only na mesma transação, imutável no banco, retenção indefinida no escopo acadêmico; leitura pelo Administrador e histórico da reserva para dono/Responsável/Administrador. | Negócio + técnica | ADR-006; `AuditoriaApiTest` |
+| DP-012 | **Respondida pelo enunciado:** documentação de API exigida. Contrato OpenAPI gerado (`/v3/api-docs`, `/swagger-ui.html`) + fluxos no README. | Técnica | `README.md`; `SegurancaApiTest` usa o contrato |
+| DP-013 | Pedido com vários recursos é **tudo-ou-nada**, na mesma transação. | Negócio | `ReservaApiTest` |
+| DP-014 | Metas de carga: 50 usuários simultâneos, p95 ≤ 500 ms em consultas, p95 ≤ 1 s na criação, 0% de 5xx e zero dupla reserva após a carga. | Negócio + técnica | `src/test/jmeter/`; `docs/qa/RELATORIO_CARGA.md` |
+| DP-015 | Fuso único `America/Sao_Paulo`; reservas e alterações só com início futuro; sem duração mínima/máxima nem restrição de horário institucional no RC. | Negócio | `Periodos.futuro`; `PeriodosTest` |
+| DP-016 | O próprio sistema é a fonte: competências cadastradas pelo Administrador; agenda docente = ocupações do professor, que é um **recurso alocável** sujeito à mesma regra de sobreposição. | Negócio | `TipoRecurso.PROFESSOR`; `ReservaApiTest` (professor em duas salas) |
+| DP-017 | PostgreSQL 16 + JPA/Hibernate + Flyway; Testcontainers nos testes. | Técnica | ADR-003 |
+| DP-018 | Lock `SELECT ... FOR UPDATE` por recurso em ordem de id + constraint `EXCLUDE USING gist` como defesa final. | Técnica | ADR-004; `ConcorrenciaReservaTest`, `ConstraintExclusaoTest` |
+| DP-019 | Autenticação própria com Spring Security (formulário + sessão + CSRF na web; HTTP Basic na API), BCrypt, usuários iniciais por perfil. | Técnica | ADR-005; `SegurancaApiTest` |
+
+### Lacunas fechadas que não tinham DP
+
+- **Estado `NAO_COMPARECEU`**, exigido pelo enunciado ("não compareceu"), incluído no modelo de estados (RN-025).
+- **Estado inicial de reserva de recurso comum:** `APROVADA` automaticamente (RN-026).
+- **Metas de qualidade do professor** (80% linhas, 70% branches, 0 bugs/vulnerabilidades críticas) aplicadas como gate de build (ADR-009).
+- **Requisitos críticos** para a meta "100% dos críticos na RTM": RF-001, RF-002, RF-006, RF-007, RF-008, RF-009, RF-010, RF-014, RF-016, RF-026 e RF-030 (ligados às regras críticas e aos limitadores de nota).
+
+## Análise original (26/10/2026)
+
+**Status original:** DP-001..DP-019 PENDENTES na data da análise.
 
 | ID | Decisao pendente | Alternativas e consequencias | Artefatos/requisitos afetados | Prioridade |
 |---|---|---|---|---|

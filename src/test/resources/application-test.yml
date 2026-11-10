@@ -1,0 +1,10 @@
+spring:
+  flyway:
+    locations: classpath:db/migration
+sor:
+  notificacao:
+    modo: simulado
+logging:
+  level:
+    root: warn
+    br.edu.sor: info

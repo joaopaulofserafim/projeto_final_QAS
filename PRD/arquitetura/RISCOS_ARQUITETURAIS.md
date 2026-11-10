@@ -22,3 +22,7 @@
 ## Priorizacao e condicoes de saida
 
 RA-001, RA-002, RA-003, RA-004 e RA-005 bloqueiam fechamento arquitetural para implementacao ate que invariante, estados ocupantes, manutencao, autorizacao e atomicidade sejam validados. RA-006..RA-009 precisam de regras de produto e testes de integracao antes dos fluxos relacionados serem considerados concluidos. RA-010..RA-013 bloqueiam declaracao de qualidade/contrato, mas nao impedem continuar documentacao conceitual. Nenhuma mitigacao acima foi executada nem aprovada.
+
+## Situação em 09/11/2026
+
+Todos os riscos RA-001..RA-014 têm mitigação implementada e verificada por teste automatizado; a ligação risco → mitigação → teste está na seção "Riscos arquiteturais → mitigação verificada" de [`RTM.md`](../../RTM.md). Riscos residuais (SonarCloud sem token, escopo global do Responsável, notificação síncrona) estão em `docs/qa/RELATORIO_FINAL_QUALIDADE.md`.

@@ -7,16 +7,16 @@ user_profile: advanced
 qa:
   qaLocation: docs/qa
 prd:
-  prdFile: docs/prd.md
+  prdFile: PRD/requisitos/REQUISITOS_FUNCIONAIS.md
   prdVersion: v4
   prdSharded: true
-  prdShardedLocation: docs/prd
+  prdShardedLocation: PRD
   epicFilePattern: epic-{n}*.md
 architecture:
-  architectureFile: docs/architecture.md
+  architectureFile: PRD/arquitetura/VISAO_GERAL.md
   architectureVersion: v4
   architectureSharded: true
-  architectureShardedLocation: docs/architecture
+  architectureShardedLocation: PRD/arquitetura
 customTechnicalDocuments: null
 devLoadAlwaysFiles:
   - docs/framework/coding-standards.md

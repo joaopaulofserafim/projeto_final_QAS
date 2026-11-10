@@ -1,0 +1,22 @@
+schema: 1
+story: "1.9"
+gate: CONCERNS
+status_reason: "AC1–AC6 cobertos por InterfaceE2ETest (6) no CI. A interface cobre os fluxos principais dos três perfis."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:2816fd7"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "USAB-191"
+    severity: medium
+    category: usability
+    finding: "Edição/desativação de recursos e gestão de usuários existem só na API (sem tela)."
+    suggested_action: "Acrescentar telas ou demonstrar via Swagger."
+  - id: "USAB-192"
+    severity: low
+    category: usability
+    finding: "Retirada pede ids numéricos; formato de data/hora do campo depende do navegador."
+    suggested_action: "Selecionar a reserva/material em lista."
+waiver: { active: false }

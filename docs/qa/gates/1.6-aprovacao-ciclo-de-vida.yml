@@ -1,0 +1,17 @@
+schema: 1
+story: "1.6"
+gate: PASS
+status_reason: "AC1–AC8 cobertos por CicloDeVidaReservaTest (16, incluindo 10 aprovações simultâneas) e EstadoReservaTest (58, tabela completa). Refatoração com suíte verde antes e depois."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:e6bc5cf"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "REQU-161"
+    severity: low
+    category: requirements
+    finding: "Responsável tem escopo global (DP-003)."
+    suggested_action: "Evolução: responsável por recurso."
+waiver: { active: false }

@@ -1,0 +1,17 @@
+schema: 1
+story: "1.10"
+gate: PASS
+status_reason: "Metas de DP-014 atendidas na medição oficial; integridade verificada por SQL; DEF-010 e DEF-011 corrigidos, DEF-012 documentado."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:a395127"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues:
+  - id: "PERF-1101"
+    severity: low
+    category: performance
+    finding: "Aplicação, banco e JMeter na mesma máquina."
+    suggested_action: "Repetir em ambiente separado para dimensionamento."
+waiver: { active: false }

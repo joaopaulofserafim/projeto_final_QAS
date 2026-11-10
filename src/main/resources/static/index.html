@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Organização de Recursos</title>
+    <link rel="stylesheet" href="/webjars/bootstrap/5.3.8/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<header class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand mb-0 h1">Organização de Recursos</span>
+    <div id="sessao" class="d-none">
+        <div class="text-light small d-flex align-items-center gap-2">
+            <span id="usuario-atual" data-testid="usuario-atual"></span>
+            <button id="botao-sair" type="button" class="btn btn-outline-light btn-sm">Sair</button>
+        </div>
+    </div>
+</header>
+
+<main class="container-lg py-3">
+    <div id="mensagem" class="d-none" role="status" aria-live="polite" data-testid="mensagem"></div>
+
+    <!-- Login -->
+    <section id="tela-login" class="row justify-content-center d-none" aria-labelledby="titulo-login">
+        <div class="col-12 col-sm-8 col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h1 id="titulo-login" class="h4 mb-3">Entrar</h1>
+                    <form id="form-login" novalidate>
+                        <div class="mb-3">
+                            <label for="login-usuario" class="form-label">Usuário</label>
+                            <input id="login-usuario" name="username" class="form-control" autocomplete="username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-senha" class="form-label">Senha</label>
+                            <input id="login-senha" name="password" type="password" class="form-control"
+                                   autocomplete="current-password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" data-testid="entrar">Entrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Aplicação -->
+    <section id="tela-app" class="d-none">
+        <nav aria-label="Seções">
+            <ul class="nav nav-pills flex-nowrap overflow-auto mb-3" id="abas">
+                <li class="nav-item"><button class="nav-link" data-aba="reservar" type="button">Recursos e reservas</button></li>
+                <li class="nav-item"><button class="nav-link" data-aba="minhas" data-perfis="SOLICITANTE" type="button">Minhas reservas</button></li>
+                <li class="nav-item"><button class="nav-link" data-aba="aprovacoes" data-perfis="RESPONSAVEL" type="button">Aprovações e uso</button></li>
+                <li class="nav-item"><button class="nav-link" data-aba="movimentacoes" data-perfis="RESPONSAVEL" type="button">Retiradas</button></li>
+                <li class="nav-item"><button class="nav-link" data-aba="admin" data-perfis="ADMINISTRADOR" type="button">Administração</button></li>
+                <li class="nav-item"><button class="nav-link" data-aba="notificacoes" type="button">Notificações</button></li>
+            </ul>
+        </nav>
+
+        <!-- Recursos e reservas -->
+        <section id="aba-reservar" class="aba" aria-label="Recursos e reservas">
+            <form id="form-busca" class="card card-body mb-3">
+                <h2 class="h5">Pesquisar recursos</h2>
+                <div class="row g-2">
+                    <div class="col-6 col-md-2">
+                        <label for="busca-tipo" class="form-label">Tipo</label>
+                        <select id="busca-tipo" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="SALA">Sala</option>
+                            <option value="PROFESSOR">Professor</option>
+                            <option value="MATERIAL">Material</option>
+                            <option value="EQUIPAMENTO">Equipamento</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="busca-texto" class="form-label">Nome ou código</label>
+                        <input id="busca-texto" class="form-control">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="busca-capacidade" class="form-label">Capacidade mín.</label>
+                        <input id="busca-capacidade" type="number" min="1" class="form-control">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label for="busca-localizacao" class="form-label">Localização</label>
+                        <input id="busca-localizacao" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="busca-competencia" class="form-label">Competência (professor)</label>
+                        <input id="busca-competencia" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="busca-inicio" class="form-label">Início</label>
+                        <input id="busca-inicio" type="datetime-local" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label for="busca-fim" class="form-label">Término</label>
+                        <input id="busca-fim" type="datetime-local" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-4 d-flex align-items-end gap-2">
+                        <div class="form-check mb-2">
+                            <input id="busca-livres" type="checkbox" class="form-check-input">
+                            <label for="busca-livres" class="form-check-label">Só livres no período</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2">
+                    <button type="submit" class="btn btn-primary" data-testid="pesquisar">Pesquisar</button>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="tabela-recursos">
+                    <thead><tr><th scope="col">Escolher</th><th scope="col">Código</th><th scope="col">Nome</th>
+                        <th scope="col">Tipo</th><th scope="col">Capacidade</th><th scope="col">Local</th>
+                        <th scope="col">Situação no período</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <form id="form-reserva" class="card card-body mb-3">
+                <h2 class="h5">Solicitar reserva dos recursos escolhidos no período informado acima</h2>
+                <div class="row g-2">
+                    <div class="col-12 col-md-6">
+                        <label for="reserva-finalidade" class="form-label">Finalidade</label>
+                        <input id="reserva-finalidade" class="form-control" maxlength="300">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label for="reserva-justificativa" class="form-label">Justificativa (obrigatória para recurso restrito)</label>
+                        <input id="reserva-justificativa" class="form-control" maxlength="500">
+                    </div>
+                </div>
+                <div class="mt-2 d-flex flex-wrap gap-2">
+                    <button type="button" id="botao-disponibilidade" class="btn btn-outline-secondary">Verificar disponibilidade</button>
+                    <button type="submit" id="botao-reservar" class="btn btn-success" data-perfis="SOLICITANTE"
+                            data-testid="solicitar-reserva">Solicitar reserva</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Minhas reservas -->
+        <section id="aba-minhas" class="aba d-none" aria-label="Minhas reservas">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="tabela-minhas">
+                    <thead><tr><th>#</th><th>Período</th><th>Recursos</th><th>Estado</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="historico" class="card card-body d-none" aria-live="polite"></div>
+        </section>
+
+        <!-- Aprovações e uso -->
+        <section id="aba-aprovacoes" class="aba d-none" aria-label="Aprovações e uso">
+            <h2 class="h5">Solicitações aguardando decisão</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="tabela-fila">
+                    <thead><tr><th>#</th><th>Solicitante</th><th>Período</th><th>Recursos</th><th>Justificativa</th><th>Decisão</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <h2 class="h5 mt-3">Reservas aprovadas e em uso</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="tabela-uso">
+                    <thead><tr><th>#</th><th>Solicitante</th><th>Período</th><th>Recursos</th><th>Estado</th><th>Ações</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Retiradas -->
+        <section id="aba-movimentacoes" class="aba d-none" aria-label="Retiradas e devoluções">
+            <form id="form-retirada" class="card card-body mb-3">
+                <h2 class="h5">Registrar retirada</h2>
+                <div class="row g-2">
+                    <div class="col-6 col-md-3">
+                        <label for="retirada-reserva" class="form-label">Nº da reserva</label>
+                        <input id="retirada-reserva" type="number" min="1" class="form-control">
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="retirada-recurso" class="form-label">Id do material</label>
+                        <input id="retirada-recurso" type="number" min="1" class="form-control">
+                    </div>
+                    <div class="col-12 col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary">Registrar retirada</button>
+                    </div>
+                </div>
+            </form>
+            <h2 class="h5">Pendentes de devolução</h2>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle" id="tabela-movimentacoes">
+                    <thead><tr><th>#</th><th>Reserva</th><th>Item</th><th>Prazo</th><th>Situação</th><th>Devolução</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Administração -->
+        <section id="aba-admin" class="aba d-none" aria-label="Administração">
+            <div id="painel-resumo" class="row g-2 mb-3" data-testid="painel-resumo"></div>
+
+            <form id="form-recurso" class="card card-body mb-3">
+                <h2 class="h5">Cadastrar recurso</h2>
+                <div class="row g-2">
+                    <div class="col-6 col-md-2"><label for="recurso-codigo" class="form-label">Código</label>
+                        <input id="recurso-codigo" class="form-control"></div>
+                    <div class="col-6 col-md-3"><label for="recurso-nome" class="form-label">Nome</label>
+                        <input id="recurso-nome" class="form-control"></div>
+                    <div class="col-6 col-md-2"><label for="recurso-tipo" class="form-label">Tipo</label>
+                        <select id="recurso-tipo" class="form-select">
+                            <option value="SALA">Sala</option><option value="PROFESSOR">Professor</option>
+                            <option value="MATERIAL">Material</option><option value="EQUIPAMENTO">Equipamento</option>
+                        </select></div>
+                    <div class="col-6 col-md-2"><label for="recurso-capacidade" class="form-label">Capacidade</label>
+                        <input id="recurso-capacidade" type="number" min="1" class="form-control"></div>
+                    <div class="col-12 col-md-3"><label for="recurso-localizacao" class="form-label">Localização</label>
+                        <input id="recurso-localizacao" class="form-control"></div>
+                    <div class="col-12 col-md-6"><label for="recurso-competencias" class="form-label">Competências (separadas por vírgula)</label>
+                        <input id="recurso-competencias" class="form-control"></div>
+                    <div class="col-12 col-md-3 d-flex align-items-end"><div class="form-check mb-2">
+                        <input id="recurso-restrito" type="checkbox" class="form-check-input">
+                        <label for="recurso-restrito" class="form-check-label">Exige aprovação</label></div></div>
+                    <div class="col-12 col-md-3 d-flex align-items-end"><button type="submit" class="btn btn-primary">Cadastrar</button></div>
+                </div>
+            </form>
+
+            <form id="form-manutencao" class="card card-body mb-3">
+                <h2 class="h5">Bloquear recurso para manutenção</h2>
+                <div class="row g-2">
+                    <div class="col-6 col-md-2"><label for="manutencao-recurso" class="form-label">Id do recurso</label>
+                        <input id="manutencao-recurso" type="number" min="1" class="form-control"></div>
+                    <div class="col-6 col-md-3"><label for="manutencao-inicio" class="form-label">Início</label>
+                        <input id="manutencao-inicio" type="datetime-local" class="form-control"></div>
+                    <div class="col-6 col-md-3"><label for="manutencao-fim" class="form-label">Término</label>
+                        <input id="manutencao-fim" type="datetime-local" class="form-control"></div>
+                    <div class="col-6 col-md-2"><label for="manutencao-motivo" class="form-label">Motivo</label>
+                        <input id="manutencao-motivo" class="form-control"></div>
+                    <div class="col-12 col-md-2 d-flex align-items-end"><button type="submit" class="btn btn-warning">Bloquear</button></div>
+                </div>
+            </form>
+
+            <form id="form-relatorio" class="card card-body mb-3">
+                <h2 class="h5">Relatórios</h2>
+                <div class="row g-2">
+                    <div class="col-6 col-md-3"><label for="relatorio-inicio" class="form-label">De</label>
+                        <input id="relatorio-inicio" type="datetime-local" class="form-control"></div>
+                    <div class="col-6 col-md-3"><label for="relatorio-fim" class="form-label">Até</label>
+                        <input id="relatorio-fim" type="datetime-local" class="form-control"></div>
+                    <div class="col-12 col-md-6 d-flex align-items-end"><button type="submit" class="btn btn-primary">Gerar</button></div>
+                </div>
+                <p id="relatorio-criterio" class="small text-muted mt-2 mb-0"></p>
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm" id="tabela-relatorio">
+                        <thead><tr><th>Recurso</th><th>Tipo</th><th>Reservas</th><th>Horas</th><th>% ocupação</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <p id="relatorio-conflitos" class="mb-0"></p>
+            </form>
+
+            <h2 class="h5">Auditoria recente</h2>
+            <div class="table-responsive">
+                <table class="table table-sm small" id="tabela-auditoria">
+                    <thead><tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Registro</th><th>Estado</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Notificações -->
+        <section id="aba-notificacoes" class="aba d-none" aria-label="Notificações">
+            <ul class="list-group" id="lista-notificacoes"></ul>
+        </section>
+    </section>
+</main>
+<script src="/assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+schema: 1
+story: "1.5"
+gate: PASS
+status_reason: "TDD comprovado (RED d7b9555 com CI vermelho, GREEN a9571f5 com CI verde). AC1–AC8 cobertos; 20 pedidos simultâneos → 1 aceito em 3/3 rodadas; constraint do banco verificada isoladamente."
+reviewer: "Claude Code atuando como @qa (Quinn); revisão humana por par pendente no PR"
+updated: "2026-11-09"
+reviewed_revision: "commit:a9571f5"
+evidence:
+  suite: "./mvnw verify — 247 testes, 0 falhas; JaCoCo 97,7% linhas / 88,0% branches"
+  ci: "https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100"
+top_issues: []
+waiver: { active: false }

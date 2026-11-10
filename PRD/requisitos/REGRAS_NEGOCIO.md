@@ -178,6 +178,37 @@ Fonte: escopo fornecido nesta etapa, personas e jornadas em `PRD/personas/` e `P
 **Excecoes:** Formulas, janelas e criterio de utilizacao permanecem pendentes DP-010.  
 **Exemplo:** Se nao houver criterio de “conflito evitado”, relatorio indica metrica pendente/indisponivel, sem estimativa.
 
+## Regras adicionadas pelas decisões de 09/11/2026
+
+As regras abaixo decorrem das decisões registradas em `PENDENCIAS_DECISOES.md` (seção "Registro de decisões — 09/11/2026"). Regras de negócio estão sujeitas a confirmação do PO.
+
+### RN-025 — Não comparecimento
+**Descricao:** Reserva `APROVADA` cujo horário de início já passou pode ser marcada pelo Responsável como `NAO_COMPARECEU`, liberando o restante do horário.  
+**Justificativa:** Estado alternativo exigido pelo enunciado ("não compareceu").  
+**Requisitos associados:** RF-016, RF-028, RF-035.  
+**Exemplo:** Reserva 10:00–12:00 sem uso às 10:20 pode ser marcada como não comparecimento; às 09:50 não pode.
+
+### RN-026 — Estado inicial conforme restrição
+**Descricao:** Pedido que inclui qualquer recurso restrito nasce `SOLICITADA` e exige justificativa; pedido apenas com recursos comuns nasce `APROVADA`, com aprovação automática auditada.  
+**Requisitos associados:** RF-009, RF-010.  
+**Exemplo:** Sala comum + professor: `APROVADA`. Laboratório restrito: `SOLICITADA` até decisão do Responsável.
+
+### RN-027 — Estados que ocupam horário (decisão de DP-001)
+**Descricao:** `SOLICITADA`, `APROVADA` e `EM_USO` ocupam o horário; `REJEITADA`, `CANCELADA`, `CONCLUIDA` e `NAO_COMPARECEU` liberam. Duas solicitações simultâneas para o mesmo recurso e horário resultam em no máximo uma aceita; a outra recebe conflito.  
+**Requisitos associados:** RF-007, RF-008, RF-009.
+
+### RN-028 — Manutenção não atropela reservas
+**Descricao:** Um período de manutenção só é registrado se não houver ocupação ativa no intervalo; caso contrário é recusado com a lista das reservas em conflito para tratamento explícito pelo Administrador.  
+**Requisitos associados:** RF-026; complementa RN-007.
+
+### RN-029 — Janela de alteração e cancelamento
+**Descricao:** Alterar e cancelar só são permitidos em `SOLICITADA` ou `APROVADA` e antes do início. Alteração com recurso restrito volta a exigir aprovação. Nenhuma reserva é apagada.  
+**Requisitos associados:** RF-013, RF-014; detalha RN-013.
+
+### RN-030 — Conclusão com materiais pendentes
+**Descricao:** Reserva com material ou equipamento retirado e não devolvido não pode ser concluída. A devolução do último item conclui automaticamente a reserva que contém apenas materiais/equipamentos.  
+**Requisitos associados:** RF-019, RF-020; detalha RN-020 e RN-021.
+
 ## Pendencias de negocio relacionadas
 
 Ver `PENDENCIAS_DECISOES.md`: DP-001 (solicitacao pendente ocupa horario), DP-002 (recursos restritos e dados de decisao), DP-003 (matriz/escopo de permissoes), DP-004 (reservas existentes durante manutencao), DP-005 (desativacao com reservas e criterios cadastrais), DP-006 (transicoes e indisponibilidade durante aprovacao), DP-007 (alteracao/cancelamento), DP-008 (retirada/devolucao), DP-009 (notificacoes), DP-010 (metricas/relatorios), DP-011 (auditoria/retencao), DP-012 (contrato de fluxos publicos/API academica), DP-013 (solicitacao multipla), DP-014 (metas de qualidade), DP-015 (calendario e parametros temporais) e DP-016 (dados de competencia/disponibilidade docente).

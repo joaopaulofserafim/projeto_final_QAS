@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: sistema-organizacao-recursos
+  datasource:
+    url: ${SOR_DB_URL:jdbc:postgresql://localhost:5432/sor}
+    username: ${SOR_DB_USER:sor}
+    password: ${SOR_DB_PASSWORD:sor}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration,classpath:db/demo
+  jackson:
+    default-property-inclusion: non_null
+
+server:
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-binding-errors: never
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+sor:
+  usuarios-iniciais:
+    # Senha dos usuários de demonstração (admin, responsavel, solicitante, solicitante2). Defina SOR_SENHA_INICIAL em implantações reais.
+    segredo: ${SOR_SENHA_INICIAL:Senha@123}
+  fuso-horario: America/Sao_Paulo
+  notificacao:
+    # simulado: registra a notificação sem chamar serviço externo
+    # http: envia para a API externa configurada em "url" (WireMock nos testes)
+    modo: ${SOR_NOTIFICACAO_MODO:simulado}
+    url: ${SOR_NOTIFICACAO_URL:http://localhost:8089}
+    timeout: 2s
+
+logging:
+  level:
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: error
