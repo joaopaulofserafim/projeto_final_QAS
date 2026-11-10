@@ -6,7 +6,10 @@
 (function () {
   'use strict';
 
-  const estado = { usuario: null, selecionados: new Set(), vistos: new Map(), temporizador: null };
+  const estado = {
+    usuario: null, selecionados: new Set(), vistos: new Map(), temporizador: null,
+    feriados: new Map(), vigiaAvisos: null
+  };
   const $ = (seletor) => document.querySelector(seletor);
 
   // ------------------------------------------------------------------ utilidades
@@ -20,6 +23,14 @@
   function cookie(nome) {
     const par = document.cookie.split('; ').find((c) => c.startsWith(nome + '='));
     return par ? decodeURIComponent(par.substring(nome.length + 1)) : null;
+  }
+
+  function lerLocal(chave) {
+    try { return window.localStorage.getItem(chave); } catch (e) { return null; }
+  }
+
+  function gravarLocal(chave, valor) {
+    try { window.localStorage.setItem(chave, valor); } catch (e) { /* sem armazenamento: só perde a marcação */ }
   }
 
   const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -112,6 +123,7 @@
 
   function telaLogin() {
     estado.usuario = null;
+    clearInterval(estado.vigiaAvisos);
     $('#tela-app').classList.add('d-none');
     $('#tela-login').classList.remove('d-none');
   }
@@ -132,6 +144,9 @@
     });
     sugerirPeriodo();
     abrirAba('reservar');
+    executar(verificarAvisos);
+    clearInterval(estado.vigiaAvisos);
+    estado.vigiaAvisos = setInterval(() => { verificarAvisos().catch(() => { /* tenta de novo no próximo ciclo */ }); }, 30000);
   }
 
   async function iniciar() {
@@ -240,12 +255,75 @@
     return `${d.getFullYear()}-${doisDigitos(d.getMonth() + 1)}-${doisDigitos(d.getDate())}T${doisDigitos(hora)}:00`;
   }
 
+  function agoraLocal() {
+    const d = new Date();
+    return `${d.getFullYear()}-${doisDigitos(d.getMonth() + 1)}-${doisDigitos(d.getDate())}T${doisDigitos(d.getHours())}:${doisDigitos(d.getMinutes())}`;
+  }
+
+  /** O seletor nativo não oferece datas passadas; o servidor continua sendo quem decide (RN de período futuro). */
+  function limitarDatas() {
+    const minimo = agoraLocal();
+    ['#busca-inicio', '#busca-fim', '#manutencao-inicio', '#manutencao-fim'].forEach((s) => { $(s).min = minimo; });
+  }
+
   function sugerirPeriodo() {
+    limitarDatas();
     if (!$('#busca-inicio').value) {
       $('#busca-inicio').value = amanha(10);
       $('#busca-fim').value = amanha(12);
     }
     resumirPeriodo();
+  }
+
+  async function feriadosDe(ano) {
+    if (!estado.feriados.has(ano)) {
+      estado.feriados.set(ano, new Set(await api('GET', `/api/v1/disponibilidade/feriados?ano=${ano}`)));
+    }
+    return estado.feriados.get(ano);
+  }
+
+  /** Dias (aaaa-mm-dd) tocados pelo período; término à meia-noite não conta o dia seguinte. */
+  function diasDoPeriodo(inicio, fim) {
+    const dias = [];
+    const cursor = new Date(inicio.substring(0, 10) + 'T00:00:00');
+    let ultimo = fim.substring(0, 10);
+    if (fim.substring(11, 16) === '00:00') {
+      const d = new Date(ultimo + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      ultimo = `${d.getFullYear()}-${doisDigitos(d.getMonth() + 1)}-${doisDigitos(d.getDate())}`;
+    }
+    for (let i = 0; i < 31; i += 1) {
+      const dia = `${cursor.getFullYear()}-${doisDigitos(cursor.getMonth() + 1)}-${doisDigitos(cursor.getDate())}`;
+      if (dia > ultimo) break;
+      dias.push(dia);
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return dias;
+  }
+
+  /** Avisa sobre data passada ou feriado antes do envio. Devolve o problema que impede a reserva, se houver. */
+  async function validarPeriodo() {
+    const aviso = $('#aviso-periodo');
+    const inicio = $('#busca-inicio').value;
+    const fim = $('#busca-fim').value;
+    let problema = null;
+    if (inicio && fim) {
+      if (inicio < agoraLocal()) {
+        problema = 'Esse horário já passou. Escolha uma data e hora futura.';
+      } else {
+        const dias = diasDoPeriodo(inicio, fim);
+        for (const dia of dias) {
+          const feriados = await feriadosDe(Number(dia.substring(0, 4)));
+          if (feriados.has(dia)) {
+            problema = `${dia.substring(8, 10)}/${dia.substring(5, 7)}/${dia.substring(0, 4)} é feriado; não há reservas nesse dia.`;
+            break;
+          }
+        }
+      }
+    }
+    aviso.textContent = problema || '';
+    aviso.classList.toggle('d-none', !problema);
+    return problema;
   }
 
   $('#aba-reservar').addEventListener('click', (evento) => {
@@ -255,6 +333,7 @@
     $('#busca-inicio').value = amanha(de);
     $('#busca-fim').value = amanha(ate);
     resumirPeriodo();
+    executar(validarPeriodo);
   });
 
   function resumirPeriodo() {
@@ -264,8 +343,10 @@
       ? `${dataHora(inicio).substring(0, 10)} · ${dataHora(inicio).substring(11)} às ${dataHora(fim).substring(11)}`
       : 'Informe o início e o término na busca.';
   }
-  $('#busca-inicio').addEventListener('change', resumirPeriodo);
-  $('#busca-fim').addEventListener('change', resumirPeriodo);
+  ['#busca-inicio', '#busca-fim'].forEach((s) => $(s).addEventListener('change', () => {
+    resumirPeriodo();
+    executar(validarPeriodo);
+  }));
 
   $('#form-busca').addEventListener('submit', (evento) => {
     evento.preventDefault();
@@ -308,13 +389,51 @@
     recursos.forEach((r) => estado.vistos.set(r.id, r));
     $('#grade-recursos').innerHTML = recursos.length === 0
       ? vazio('Nenhum recurso encontrado com esses filtros.')
-      : recursos.map(cartaoRecurso).join('');
+      : SECOES.map((secao) => secaoRecursos(secao, recursos.filter((r) => r.tipo === secao.tipo))).join('');
     atualizarPainel();
+  }
+
+  const SECOES = [
+    { tipo: 'SALA', titulo: 'Salas', icone: 'sala' },
+    { tipo: 'PROFESSOR', titulo: 'Professores', icone: 'professor' },
+    { tipo: 'EQUIPAMENTO', titulo: 'Equipamentos', icone: 'equipamento' },
+    { tipo: 'MATERIAL', titulo: 'Materiais', icone: 'material' }
+  ];
+
+  function secaoRecursos(secao, itens) {
+    if (itens.length === 0) return '';
+    return `<section class="secao-recursos" aria-label="${secao.titulo}">
+      <h2 class="secao-recursos-titulo">${icone(secao.icone)}${secao.titulo}<span class="contagem">${itens.length}</span></h2>
+      <div class="grade-itens">${itens.map(cartaoRecurso).join('')}</div>
+    </section>`;
+  }
+
+  /** RN-032: até 1 sala, 1 professor e 3 materiais/equipamentos por reserva (o servidor também valida). */
+  const LIMITES = [
+    { tipos: ['SALA'], maximo: 1, texto: 'uma sala' },
+    { tipos: ['PROFESSOR'], maximo: 1, texto: 'um professor' },
+    { tipos: ['MATERIAL', 'EQUIPAMENTO'], maximo: 3, texto: 'três materiais ou equipamentos' }
+  ];
+
+  function limiteExcedido(novoId) {
+    const novo = estado.vistos.get(novoId);
+    if (!novo) return null;
+    const limite = LIMITES.find((l) => l.tipos.includes(novo.tipo));
+    const jaEscolhidos = [...estado.selecionados]
+      .map((id) => estado.vistos.get(id))
+      .filter((r) => r && limite.tipos.includes(r.tipo)).length;
+    return jaEscolhidos >= limite.maximo ? limite : null;
   }
 
   $('#grade-recursos').addEventListener('change', (evento) => {
     if (!evento.target.classList.contains('escolher')) return;
     const id = Number(evento.target.value);
+    const excedido = evento.target.checked ? limiteExcedido(id) : null;
+    if (excedido) {
+      evento.target.checked = false;
+      mostrar('warning', 'Limite por reserva.', `Cada reserva pode ter no máximo ${excedido.texto}. Desmarque outro ou faça uma reserva separada.`);
+      return;
+    }
     if (evento.target.checked) estado.selecionados.add(id); else estado.selecionados.delete(id);
     evento.target.closest('.recurso-card').classList.toggle('escolhido', evento.target.checked);
     atualizarPainel();
@@ -355,6 +474,11 @@
   $('#form-reserva').addEventListener('submit', (evento) => {
     evento.preventDefault();
     executar(async () => {
+      const problema = await validarPeriodo();
+      if (problema) {
+        mostrar('warning', 'Período indisponível.', problema);
+        return;
+      }
       const reserva = await api('POST', '/api/v1/reservas', {
         inicio: paraApi($('#busca-inicio').value), fim: paraApi($('#busca-fim').value),
         finalidade: $('#reserva-finalidade').value,
@@ -363,6 +487,9 @@
       });
       const situacao = reserva.estado === 'APROVADA' ? 'confirmada' : 'registrada e aguarda aprovação';
       sucesso(`Reserva #${reserva.id} ${situacao} (${nomesEstado[reserva.estado]}).`);
+      $('#reserva-finalidade').value = '';
+      $('#reserva-justificativa').value = '';
+      verificarAvisos().catch(() => { /* o aviso chega no próximo ciclo */ });
     });
   });
 
@@ -390,15 +517,37 @@
         sucesso(`Reserva #${id} cancelada.`);
         await carregarMinhas();
       } else {
-        const eventos = await api('GET', `/api/v1/reservas/${id}/historico`);
-        const caixa = $('#historico');
-        caixa.classList.remove('d-none');
-        caixa.innerHTML = `<h2 class="cartao-titulo">Histórico da reserva #${esc(id)}</h2><ol class="mb-0">${eventos.map((e) =>
-          `<li>${esc(dataHora(e.ocorridoEm))} — ${esc(e.acao)} por ${esc(e.ator)}: ${esc(e.estadoAnterior || '—')} → ${esc(e.estadoNovo || '—')}</li>`).join('')}</ol>`;
-        caixa.scrollIntoView({ block: 'nearest' });
+        await alternarHistorico(botao, id);
       }
     });
   });
+
+  const ACOES_HISTORICO = {
+    RESERVA_CRIADA: 'Reserva criada', RESERVA_APROVADA: 'Aprovada', RESERVA_REJEITADA: 'Rejeitada',
+    RESERVA_CANCELADA: 'Cancelada', RESERVA_ALTERADA: 'Alterada', RESERVA_EM_USO: 'Uso iniciado',
+    RESERVA_CONCLUIDA: 'Concluída', RESERVA_NAO_COMPARECEU: 'Não compareceu'
+  };
+
+  /** Cada cartão abre e fecha o próprio histórico, logo abaixo dele. */
+  async function alternarHistorico(botao, id) {
+    const cartao = botao.closest('.reserva-card');
+    const aberto = cartao.querySelector('.rv-historico');
+    if (aberto) {
+      aberto.remove();
+      botao.textContent = 'Histórico';
+      botao.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    const eventos = await api('GET', `/api/v1/reservas/${id}/historico`);
+    cartao.insertAdjacentHTML('beforeend', `<div class="rv-historico" aria-label="Histórico da reserva ${esc(id)}">
+      <ol class="linha-tempo">${eventos.map((e) => `<li>
+        <span class="lt-quando">${esc(dataHora(e.ocorridoEm))}</span>
+        <span class="lt-o-que"><strong>${esc(ACOES_HISTORICO[e.acao] || e.acao)}</strong> por ${esc(e.ator)}${e.estadoNovo
+          ? ` <span class="texto-suave">· ${esc(nomesEstado[e.estadoAnterior] || e.estadoAnterior || 'início')} → ${esc(nomesEstado[e.estadoNovo] || e.estadoNovo)}</span>` : ''}${e.detalhes
+          ? `<br><small class="texto-suave">${esc(e.detalhes)}</small>` : ''}</span></li>`).join('')}</ol></div>`);
+    botao.textContent = 'Ocultar histórico';
+    botao.setAttribute('aria-expanded', 'true');
+  }
 
   // ------------------------------------------------------------------ aprovações e uso
 
@@ -458,6 +607,20 @@
             <button class="btn btn-primary btn-pequeno" data-devolver="${m.id}">Registrar devolução</button></div></div>`).join('');
   }
 
+  $('#retirada-reserva').addEventListener('change', () => executar(async () => {
+    const seletor = $('#retirada-recurso');
+    const numero = $('#retirada-reserva').value;
+    if (!numero) {
+      seletor.innerHTML = '<option value="">Informe a reserva primeiro</option>';
+      return;
+    }
+    const reserva = await api('GET', `/api/v1/reservas/${numero}`);
+    const itens = reserva.recursos.filter((r) => ['MATERIAL', 'EQUIPAMENTO'].includes(r.tipo));
+    seletor.innerHTML = itens.length === 0
+      ? '<option value="">Esta reserva não tem materiais</option>'
+      : itens.map((r) => `<option value="${r.id}">${esc(r.codigo)} — ${esc(r.nome)}</option>`).join('');
+  }));
+
   $('#form-retirada').addEventListener('submit', (evento) => {
     evento.preventDefault();
     executar(async () => {
@@ -465,6 +628,8 @@
         reservaId: Number($('#retirada-reserva').value), recursoId: Number($('#retirada-recurso').value)
       });
       sucesso('Retirada registrada.');
+      evento.target.reset();
+      $('#retirada-recurso').innerHTML = '<option value="">Informe a reserva primeiro</option>';
       await carregarMovimentacoes();
     });
   });
@@ -482,7 +647,39 @@
 
   // ------------------------------------------------------------------ administração
 
-  async function carregarAdmin() {
+  const carregadoresAdmin = {
+    visao: carregarVisaoGeral,
+    recursos: carregarRecursosAdmin,
+    manutencao: carregarManutencoes,
+    relatorios: () => Promise.resolve()
+  };
+
+  function abrirSubAba(nome) {
+    document.querySelectorAll('#sub-abas-admin .sub-aba-botao').forEach((b) => {
+      const ativa = b.dataset.sub === nome;
+      b.classList.toggle('ativo', ativa);
+      if (ativa) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+    });
+    document.querySelectorAll('#aba-admin .sub-aba').forEach((p) => p.classList.toggle('d-none', p.dataset.painel !== nome));
+    return carregadoresAdmin[nome]();
+  }
+
+  $('#sub-abas-admin').addEventListener('click', (evento) => {
+    const botao = evento.target.closest('[data-sub]');
+    if (botao) executar(() => abrirSubAba(botao.dataset.sub));
+  });
+
+  function carregarAdmin() {
+    const ativa = document.querySelector('#sub-abas-admin .sub-aba-botao.ativo');
+    if (!$('#relatorio-inicio').value) {
+      const hoje = new Date();
+      $('#relatorio-inicio').value = `${hoje.getFullYear()}-${doisDigitos(hoje.getMonth() + 1)}-01T00:00`;
+      $('#relatorio-fim').value = `${agoraLocal().substring(0, 10)}T23:59`;
+    }
+    return abrirSubAba(ativa ? ativa.dataset.sub : 'visao');
+  }
+
+  async function carregarVisaoGeral() {
     const [resumo, auditoria] = await Promise.all([
       api('GET', '/api/v1/relatorios/resumo'),
       api('GET', '/api/v1/auditoria')
@@ -512,6 +709,7 @@
       });
       sucesso(`Recurso ${recurso.codigo} cadastrado (id ${recurso.id}).`);
       evento.target.reset();
+      await carregarRecursosAdmin();
     });
   });
 
@@ -523,7 +721,8 @@
         fim: paraApi($('#manutencao-fim').value), motivo: $('#manutencao-motivo').value
       });
       sucesso('Manutenção registrada; o recurso está bloqueado no período.');
-      await carregarAdmin();
+      evento.target.reset();
+      await carregarManutencoes();
     });
   });
 
@@ -542,14 +741,87 @@
     });
   });
 
+  async function carregarRecursosAdmin() {
+    const recursos = await api('GET', '/api/v1/recursos?incluirInativos=true');
+    $('#lista-recursos-admin').innerHTML = recursos.length === 0
+      ? vazio('Nenhum recurso cadastrado.')
+      : SECOES.map((secao) => {
+        const itens = recursos.filter((r) => r.tipo === secao.tipo);
+        if (itens.length === 0) return '';
+        return `<h3 class="lista-compacta-grupo">${icone(secao.icone)}${secao.titulo}<span class="contagem">${itens.length}</span></h3>
+          ${itens.map((r) => `<div class="item-compacto${r.ativo ? '' : ' inativo'}">
+            <div><strong>${esc(r.nome)}</strong><small>${esc(r.codigo)} · id ${r.id}${r.restrito ? ' · exige aprovação' : ''}</small></div>
+            <button type="button" class="btn btn-suave btn-pequeno" data-recurso-acao="${r.ativo ? 'desativar' : 'reativar'}" data-id="${r.id}">
+              ${r.ativo ? 'Desativar' : 'Reativar'}</button></div>`).join('')}`;
+      }).join('');
+  }
+
+  $('#lista-recursos-admin').addEventListener('click', (evento) => {
+    const botao = evento.target.closest('button[data-recurso-acao]');
+    if (!botao) return;
+    executar(async () => {
+      await api('POST', `/api/v1/recursos/${botao.dataset.id}/${botao.dataset.recursoAcao}`);
+      sucesso(botao.dataset.recursoAcao === 'desativar' ? 'Recurso desativado.' : 'Recurso reativado.');
+      await carregarRecursosAdmin();
+    });
+  });
+
+  async function carregarManutencoes() {
+    limitarDatas();
+    const [recursos, manutencoes] = await Promise.all([
+      api('GET', '/api/v1/recursos'),
+      api('GET', '/api/v1/manutencoes?somenteAtivas=true')
+    ]);
+    const escolhido = $('#manutencao-recurso').value;
+    $('#manutencao-recurso').innerHTML = '<option value="">Escolha o recurso</option>' + SECOES.map((secao) => {
+      const itens = recursos.filter((r) => r.tipo === secao.tipo);
+      return itens.length === 0 ? '' : `<optgroup label="${secao.titulo}">${itens.map((r) =>
+        `<option value="${r.id}"${String(r.id) === escolhido ? ' selected' : ''}>${esc(r.codigo)} — ${esc(r.nome)}</option>`).join('')}</optgroup>`;
+    }).join('');
+    $('#lista-manutencoes').innerHTML = manutencoes.length === 0
+      ? vazio('Nenhum recurso em manutenção.')
+      : manutencoes.map((m) => `<div class="item-compacto">
+          <div><strong>${esc(m.recursoNome)}</strong><small>${esc(dataHora(m.inicio))} – ${esc(dataHora(m.fim))} · ${esc(m.motivo)}</small></div>
+          <button type="button" class="btn btn-suave btn-pequeno" data-cancelar-manutencao="${m.id}">Cancelar</button></div>`).join('');
+  }
+
+  $('#lista-manutencoes').addEventListener('click', (evento) => {
+    const botao = evento.target.closest('button[data-cancelar-manutencao]');
+    if (!botao) return;
+    executar(async () => {
+      await api('POST', `/api/v1/manutencoes/${botao.dataset.cancelarManutencao}/cancelar`);
+      sucesso('Manutenção cancelada; o recurso está liberado.');
+      await carregarManutencoes();
+    });
+  });
+
   // ------------------------------------------------------------------ avisos do usuário
+
+  const chaveAvisos = () => `sor-avisos-vistos-${estado.usuario ? estado.usuario.username || estado.usuario.nome : ''}`;
+
+  /** Mostra no menu quantos avisos chegaram desde a última vez que a pessoa abriu "Avisos". */
+  async function verificarAvisos() {
+    if (!estado.usuario) return;
+    const lista = await api('GET', '/api/v1/notificacoes');
+    const visto = Number(lerLocal(chaveAvisos()) || 0);
+    const novos = lista.filter((n) => n.id > visto).length;
+    const selo = $('#badge-avisos');
+    const naAba = !$('#aba-notificacoes').classList.contains('d-none');
+    selo.textContent = novos > 9 ? '9+' : String(novos);
+    selo.classList.toggle('d-none', novos === 0 || naAba);
+    selo.setAttribute('aria-label', `${novos} aviso(s) novo(s)`);
+  }
 
   async function carregarNotificacoes() {
     const lista = await api('GET', '/api/v1/notificacoes');
+    const visto = Number(lerLocal(chaveAvisos()) || 0);
     $('#lista-notificacoes').innerHTML = lista.length === 0
       ? vazio('Você não tem avisos por enquanto.')
-      : lista.map((n) => `<div class="notificacao">${icone('sino')}<div>${esc(n.mensagem)}<br>
-          <small>${esc(dataHora(n.criadaEm))}</small></div></div>`).join('');
+      : lista.map((n) => `<div class="notificacao${n.id > visto ? ' nova' : ''}">${icone('sino')}<div>${esc(n.mensagem)}<br>
+          <small>${esc(dataHora(n.criadaEm))}${n.id > visto ? ' · <b class="novo">novo</b>' : ''}</small></div></div>`).join('');
+    const maior = lista.reduce((m, n) => Math.max(m, n.id), visto);
+    gravarLocal(chaveAvisos(), String(maior));
+    $('#badge-avisos').classList.add('d-none');
   }
 
   iniciar();

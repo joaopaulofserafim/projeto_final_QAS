@@ -73,8 +73,10 @@ class InterfaceE2ETest extends IntegracaoBase {
         if (contexto != null) {
             contexto.close();
         }
-        contexto = navegador.newContext(opcoes.setLocale("pt-BR"));
+        contexto = navegador.newContext(opcoes.setLocale("pt-BR").setTimezoneId("America/Sao_Paulo"));
         pagina = contexto.newPage();
+        // O navegador usa o mesmo "agora" do servidor de teste: a tela recusa datas passadas pelo relógio local.
+        pagina.clock().setFixedTime("2026-11-09T08:00:00-03:00");
         // Exceções de JavaScript e violações da CSP; respostas HTTP 4xx esperadas (ex.: 409) não contam.
         pagina.onPageError(errosNoConsole::add);
         pagina.onConsoleMessage(m -> {
@@ -106,6 +108,7 @@ class InterfaceE2ETest extends IntegracaoBase {
         pagina.fill("#busca-fim", "2026-11-20T12:00");
         pagina.click("[data-testid=pesquisar]");
         assertThat(pagina.locator("#grade-recursos")).containsText("SALA-E2E");
+        assertThat(pagina.locator("#grade-recursos .secao-recursos-titulo").first()).containsText("Salas");
         pagina.check("#grade-recursos input.escolher");
         pagina.click("#botao-disponibilidade");
         assertThat(pagina.locator("#grade-recursos .situacao")).containsText("Livre");
@@ -114,6 +117,8 @@ class InterfaceE2ETest extends IntegracaoBase {
         pagina.click("[data-testid=solicitar-reserva]");
         assertThat(pagina.locator("[data-testid=mensagem]")).containsText("confirmada");
 
+        assertThat(pagina.locator("#reserva-finalidade")).hasValue("");
+        pagina.fill("#reserva-finalidade", "Aula de Engenharia de Software");
         pagina.click("[data-testid=solicitar-reserva]");
         assertThat(pagina.locator("[data-testid=mensagem]")).containsText("Conflito de horário");
         assertThat(pagina.locator("[data-testid=mensagem]")).containsText("já está reservado");
@@ -121,6 +126,9 @@ class InterfaceE2ETest extends IntegracaoBase {
         pagina.click("button[data-aba=minhas]");
         assertThat(pagina.locator("#lista-minhas .reserva-card")).hasCount(1);
         assertThat(pagina.locator("#lista-minhas")).containsText("Aprovada");
+
+        pagina.click("#lista-minhas button[data-acao=historico]");
+        assertThat(pagina.locator("#lista-minhas .reserva-card .rv-historico")).containsText("Reserva criada");
         assertThat(errosNoConsole).as("erros de JavaScript/CSP no console").isEmpty();
     }
 

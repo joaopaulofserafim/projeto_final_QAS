@@ -1,5 +1,6 @@
 package br.edu.sor.disponibilidade;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,9 +20,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class DisponibilidadeController {
 
     private final DisponibilidadeService servico;
+    private final CalendarioAcademico calendario;
 
-    public DisponibilidadeController(DisponibilidadeService servico) {
+    public DisponibilidadeController(DisponibilidadeService servico, CalendarioAcademico calendario) {
         this.servico = servico;
+        this.calendario = calendario;
     }
 
     /** Intervalo ocupado, sem dados de quem reservou (minimização de dados, RNF-002). */
@@ -45,5 +48,11 @@ public class DisponibilidadeController {
         return servico.agenda(recursoId, inicio, fim).stream()
                 .map(o -> new IntervaloOcupado(o.getTipo(), o.getInicio(), o.getFim()))
                 .toList();
+    }
+
+    @GetMapping("/feriados")
+    @Operation(summary = "Feriados do ano (nacionais e recessos da instituição): dias sem reservas")
+    public List<LocalDate> feriados(@RequestParam int ano) {
+        return calendario.feriadosDoAno(ano);
     }
 }

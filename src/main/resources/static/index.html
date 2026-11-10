@@ -15,17 +15,14 @@
     <!-- Ícones (SVG embutido: a CSP só permite recursos do próprio site) -->
     <svg xmlns="http://www.w3.org/2000/svg" class="d-none" aria-hidden="true">
       <defs>
-        <symbol
-          id="i-logo"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <rect x="3" y="4" width="18" height="17" rx="4" />
-          <path d="M8 2.5v3M16 2.5v3M3 9.5h18M9 15l2.2 2.2L15.5 13" />
+        <!-- Marca: livro aberto, capelo e marcador de página (estudo, professor e reserva) -->
+        <symbol id="i-logo" viewBox="0 0 48 48">
+          <path d="M24 5 9 11.5 24 18l15-6.5z" fill="currentColor" />
+          <path d="M14.5 14.6v5.2c2.6 2 6 3 9.5 3s6.9-1 9.5-3v-5.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" />
+          <path d="M39 11.5v7.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+          <path d="M5 23.5c6.5-2.6 12.8-2.3 19 1.6v17.4c-6.2-3.9-12.5-4.2-19-1.6z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" />
+          <path d="M43 23.5c-6.5-2.6-12.8-2.3-19 1.6v17.4c6.2-3.9 12.5-4.2 19-1.6z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" />
+          <path d="M33 23v10.5l2.75-2 2.75 2V23.6" fill="#e2a21a" />
         </symbol>
         <symbol
           id="i-busca"
@@ -255,38 +252,11 @@
       aria-labelledby="titulo-login"
     >
       <div class="login-hero">
-        <div class="brand brand-claro">
-          <span class="brand-marca"
-            ><svg class="ic"><use href="#i-logo" /></svg
-          ></span>
-          <span
-            ><strong>Portal de Recursos</strong
-            ><small>Organização acadêmica</small></span
-          >
-        </div>
-        <div class="login-hero-texto">
-          <h2>
-            Reserve salas, professores e equipamentos
-            <em>sem choque de horário.</em>
-          </h2>
-          <p>
-            Consulte a disponibilidade na hora, peça aprovação quando o recurso
-            exigir e acompanhe cada reserva do pedido à conclusão.
-          </p>
-          <ul class="login-pontos">
-            <li>
-              <svg class="ic"><use href="#i-raio" /></svg>Recursos comuns são
-              confirmados na hora
-            </li>
-            <li>
-              <svg class="ic"><use href="#i-escudo" /></svg>Dois pedidos para o
-              mesmo horário nunca viram duas reservas
-            </li>
-            <li>
-              <svg class="ic"><use href="#i-agenda" /></svg>Cada mudança fica
-              registrada no histórico
-            </li>
-          </ul>
+        <div class="emblema" role="img" aria-label="Portal de Recursos — organização acadêmica">
+          <span class="emblema-selo"><svg class="emblema-icone" aria-hidden="true"><use href="#i-logo" /></svg></span>
+          <span class="emblema-nome">Portal de Recursos</span>
+          <span class="emblema-filete" aria-hidden="true"></span>
+          <span class="emblema-lema">Organização acadêmica</span>
         </div>
       </div>
       <div class="login-painel">
@@ -401,7 +371,7 @@
             </li>
             <li>
               <button class="menu-item" data-aba="notificacoes" type="button">
-                <svg class="ic"><use href="#i-sino" /></svg><span>Avisos</span>
+                <span class="menu-icone"><svg class="ic"><use href="#i-sino" /></svg><span id="badge-avisos" class="menu-badge d-none" data-testid="badge-avisos"></span></span><span>Avisos</span>
               </button>
             </li>
           </ul>
@@ -532,6 +502,7 @@
                       </button>
                     </div>
                   </div>
+                  <p id="aviso-periodo" class="aviso-periodo d-none" role="alert"></p>
                   <div class="filtros-acoes">
                     <label class="check-suave" for="busca-livres">
                       <input
@@ -575,6 +546,7 @@
                   <div id="escolhidos" class="escolhidos">
                     <span class="texto-suave">Nenhum recurso escolhido.</span>
                   </div>
+                  <p class="regra-limite">Por reserva: até 1 sala, 1 professor e 3 materiais ou equipamentos.</p>
                   <div class="campo">
                     <label for="reserva-finalidade">Finalidade</label>
                     <input
@@ -630,7 +602,6 @@
               class="lista-cartoes"
               data-testid="lista-minhas"
             ></div>
-            <div id="historico" class="cartao d-none" aria-live="polite"></div>
           </section>
 
           <!-- Aprovações e uso -->
@@ -651,32 +622,25 @@
             class="aba d-none"
             aria-label="Retiradas e devoluções"
           >
-            <form id="form-retirada" class="cartao">
-              <h2 class="cartao-titulo">Registrar retirada</h2>
-              <div class="form-linha">
+            <form id="form-retirada" class="cartao cartao-form">
+              <div class="cartao-cabecalho">
+                <h2 class="cartao-titulo">Registrar retirada</h2>
+                <p class="texto-suave">Informe a reserva aprovada e escolha o material que está sendo entregue.</p>
+              </div>
+              <div class="form-grade">
                 <div class="campo">
                   <label for="retirada-reserva">Nº da reserva</label>
-                  <input
-                    id="retirada-reserva"
-                    type="number"
-                    min="1"
-                    class="form-control"
-                  />
+                  <input id="retirada-reserva" type="number" min="1" class="form-control" placeholder="Ex.: 12" />
                 </div>
                 <div class="campo">
-                  <label for="retirada-recurso">Id do material</label>
-                  <input
-                    id="retirada-recurso"
-                    type="number"
-                    min="1"
-                    class="form-control"
-                  />
+                  <label for="retirada-recurso">Material ou equipamento</label>
+                  <select id="retirada-recurso" class="form-select">
+                    <option value="">Informe a reserva primeiro</option>
+                  </select>
                 </div>
-                <div class="campo campo-acao">
-                  <button type="submit" class="btn btn-primary">
-                    Registrar retirada
-                  </button>
-                </div>
+              </div>
+              <div class="form-rodape">
+                <button type="submit" class="btn btn-primary">Registrar retirada</button>
               </div>
             </form>
             <h2 class="secao-titulo">Pendentes de devolução</h2>
@@ -685,162 +649,162 @@
 
           <!-- Administração -->
           <section id="aba-admin" class="aba d-none" aria-label="Administração">
-            <div
-              id="painel-resumo"
-              class="indicadores"
-              data-testid="painel-resumo"
-            ></div>
+            <nav class="sub-abas" id="sub-abas-admin" aria-label="Áreas da administração">
+              <button type="button" class="sub-aba-botao ativo" data-sub="visao">Visão geral</button>
+              <button type="button" class="sub-aba-botao" data-sub="recursos">Recursos</button>
+              <button type="button" class="sub-aba-botao" data-sub="manutencao">Manutenção</button>
+              <button type="button" class="sub-aba-botao" data-sub="relatorios">Relatórios</button>
+            </nav>
 
-            <div class="grade-admin">
-              <form id="form-recurso" class="cartao">
-                <h2 class="cartao-titulo">Cadastrar recurso</h2>
-                <div class="form-linha">
-                  <div class="campo">
-                    <label for="recurso-codigo">Código</label
-                    ><input id="recurso-codigo" class="form-control" />
-                  </div>
-                  <div class="campo campo-grande">
-                    <label for="recurso-nome">Nome</label
-                    ><input id="recurso-nome" class="form-control" />
-                  </div>
-                  <div class="campo">
-                    <label for="recurso-tipo">Tipo</label>
-                    <select id="recurso-tipo" class="form-select">
-                      <option value="SALA">Sala</option>
-                      <option value="PROFESSOR">Professor</option>
-                      <option value="MATERIAL">Material</option>
-                      <option value="EQUIPAMENTO">Equipamento</option>
-                    </select>
-                  </div>
-                  <div class="campo">
-                    <label for="recurso-capacidade">Capacidade</label
-                    ><input
-                      id="recurso-capacidade"
-                      type="number"
-                      min="1"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="campo">
-                    <label for="recurso-localizacao">Localização</label
-                    ><input id="recurso-localizacao" class="form-control" />
-                  </div>
-                  <div class="campo campo-grande">
-                    <label for="recurso-competencias"
-                      >Competências (separadas por vírgula)</label
-                    ><input id="recurso-competencias" class="form-control" />
-                  </div>
+            <!-- Visão geral -->
+            <div class="sub-aba" data-painel="visao">
+              <div id="painel-resumo" class="indicadores" data-testid="painel-resumo"></div>
+              <div class="cartao">
+                <div class="cartao-cabecalho">
+                  <h2 class="cartao-titulo">Auditoria recente</h2>
+                  <p class="texto-suave">Últimas 20 ações registradas. O registro é imutável.</p>
                 </div>
-                <div class="filtros-acoes">
-                  <label class="check-suave" for="recurso-restrito"
-                    ><input
-                      id="recurso-restrito"
-                      type="checkbox"
-                      class="form-check-input"
-                    />
-                    Exige aprovação</label
-                  >
-                  <button type="submit" class="btn btn-primary">
-                    Cadastrar
-                  </button>
+                <div class="tabela-rolavel">
+                  <table class="tabela pequeno" id="tabela-auditoria">
+                    <thead>
+                      <tr><th>Quando</th><th>Quem</th><th>Ação</th><th>Registro</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
                 </div>
-              </form>
-
-              <form id="form-manutencao" class="cartao">
-                <h2 class="cartao-titulo">Bloquear para manutenção</h2>
-                <div class="form-linha">
-                  <div class="campo">
-                    <label for="manutencao-recurso">Id do recurso</label
-                    ><input
-                      id="manutencao-recurso"
-                      type="number"
-                      min="1"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="campo">
-                    <label for="manutencao-inicio">Início</label
-                    ><input
-                      id="manutencao-inicio"
-                      type="datetime-local"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="campo">
-                    <label for="manutencao-fim">Término</label
-                    ><input
-                      id="manutencao-fim"
-                      type="datetime-local"
-                      class="form-control"
-                    />
-                  </div>
-                  <div class="campo campo-grande">
-                    <label for="manutencao-motivo">Motivo</label
-                    ><input id="manutencao-motivo" class="form-control" />
-                  </div>
-                </div>
-                <div class="filtros-acoes">
-                  <span></span
-                  ><button type="submit" class="btn btn-aviso">Bloquear</button>
-                </div>
-              </form>
+              </div>
             </div>
 
-            <form id="form-relatorio" class="cartao">
-              <h2 class="cartao-titulo">Relatórios</h2>
-              <div class="form-linha">
-                <div class="campo">
-                  <label for="relatorio-inicio">De</label
-                  ><input
-                    id="relatorio-inicio"
-                    type="datetime-local"
-                    class="form-control"
-                  />
-                </div>
-                <div class="campo">
-                  <label for="relatorio-fim">Até</label
-                  ><input
-                    id="relatorio-fim"
-                    type="datetime-local"
-                    class="form-control"
-                  />
-                </div>
-                <div class="campo campo-acao">
-                  <button type="submit" class="btn btn-primary">Gerar</button>
-                </div>
-              </div>
-              <p id="relatorio-criterio" class="texto-suave pequeno"></p>
-              <div class="tabela-rolavel">
-                <table class="tabela" id="tabela-relatorio">
-                  <thead>
-                    <tr>
-                      <th>Recurso</th>
-                      <th>Tipo</th>
-                      <th>Reservas</th>
-                      <th>Horas</th>
-                      <th>Ocupação</th>
-                    </tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-              <p id="relatorio-conflitos" class="relatorio-conflitos"></p>
-            </form>
+            <!-- Recursos -->
+            <div class="sub-aba d-none" data-painel="recursos">
+              <div class="grade-admin">
+                <form id="form-recurso" class="cartao cartao-form">
+                  <div class="cartao-cabecalho">
+                    <h2 class="cartao-titulo">Cadastrar recurso</h2>
+                    <p class="texto-suave">Salas, professores, materiais e equipamentos ficam disponíveis para reserva assim que cadastrados.</p>
+                  </div>
+                  <div class="form-grade">
+                    <div class="campo">
+                      <label for="recurso-tipo">Tipo</label>
+                      <select id="recurso-tipo" class="form-select">
+                        <option value="SALA">Sala</option>
+                        <option value="PROFESSOR">Professor</option>
+                        <option value="MATERIAL">Material</option>
+                        <option value="EQUIPAMENTO">Equipamento</option>
+                      </select>
+                    </div>
+                    <div class="campo">
+                      <label for="recurso-codigo">Código</label>
+                      <input id="recurso-codigo" class="form-control" placeholder="Ex.: SALA-201" />
+                    </div>
+                    <div class="campo campo-cheio">
+                      <label for="recurso-nome">Nome</label>
+                      <input id="recurso-nome" class="form-control" placeholder="Ex.: Sala 201" />
+                    </div>
+                    <div class="campo">
+                      <label for="recurso-capacidade">Capacidade <small>(salas)</small></label>
+                      <input id="recurso-capacidade" type="number" min="1" class="form-control" placeholder="Ex.: 40" />
+                    </div>
+                    <div class="campo">
+                      <label for="recurso-localizacao">Localização</label>
+                      <input id="recurso-localizacao" class="form-control" placeholder="Ex.: Bloco A - 2º andar" />
+                    </div>
+                    <div class="campo campo-cheio">
+                      <label for="recurso-competencias">Competências <small>(professores; separe por vírgula)</small></label>
+                      <input id="recurso-competencias" class="form-control" placeholder="Ex.: Java, Testes de Software" />
+                    </div>
+                  </div>
+                  <div class="form-rodape">
+                    <label class="check-suave" for="recurso-restrito">
+                      <input id="recurso-restrito" type="checkbox" class="form-check-input" /> Exige aprovação do responsável
+                    </label>
+                    <button type="submit" class="btn btn-primary">Cadastrar</button>
+                  </div>
+                </form>
 
-            <h2 class="secao-titulo">Auditoria recente</h2>
-            <div class="cartao tabela-rolavel">
-              <table class="tabela pequeno" id="tabela-auditoria">
-                <thead>
-                  <tr>
-                    <th>Quando</th>
-                    <th>Quem</th>
-                    <th>Ação</th>
-                    <th>Registro</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody></tbody>
-              </table>
+                <div class="cartao">
+                  <div class="cartao-cabecalho">
+                    <h2 class="cartao-titulo">Recursos cadastrados</h2>
+                    <p class="texto-suave">Recursos desativados não aparecem para reserva.</p>
+                  </div>
+                  <div id="lista-recursos-admin" class="lista-compacta"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Manutenção -->
+            <div class="sub-aba d-none" data-painel="manutencao">
+              <div class="grade-admin">
+                <form id="form-manutencao" class="cartao cartao-form">
+                  <div class="cartao-cabecalho">
+                    <h2 class="cartao-titulo">Bloquear para manutenção</h2>
+                    <p class="texto-suave">O recurso fica indisponível no período. Reservas já existentes impedem o bloqueio.</p>
+                  </div>
+                  <div class="form-grade">
+                    <div class="campo campo-cheio">
+                      <label for="manutencao-recurso">Recurso</label>
+                      <select id="manutencao-recurso" class="form-select"></select>
+                    </div>
+                    <div class="campo">
+                      <label for="manutencao-inicio">Início</label>
+                      <input id="manutencao-inicio" type="datetime-local" class="form-control" />
+                    </div>
+                    <div class="campo">
+                      <label for="manutencao-fim">Término</label>
+                      <input id="manutencao-fim" type="datetime-local" class="form-control" />
+                    </div>
+                    <div class="campo campo-cheio">
+                      <label for="manutencao-motivo">Motivo</label>
+                      <input id="manutencao-motivo" class="form-control" placeholder="Ex.: troca do projetor" />
+                    </div>
+                  </div>
+                  <div class="form-rodape">
+                    <span></span>
+                    <button type="submit" class="btn btn-aviso">Bloquear recurso</button>
+                  </div>
+                </form>
+
+                <div class="cartao">
+                  <div class="cartao-cabecalho">
+                    <h2 class="cartao-titulo">Manutenções ativas</h2>
+                    <p class="texto-suave">Cancele para liberar o recurso antes do término.</p>
+                  </div>
+                  <div id="lista-manutencoes" class="lista-compacta"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Relatórios -->
+            <div class="sub-aba d-none" data-painel="relatorios">
+              <form id="form-relatorio" class="cartao cartao-form">
+                <div class="cartao-cabecalho">
+                  <h2 class="cartao-titulo">Utilização dos recursos</h2>
+                  <p class="texto-suave">Horas reservadas e conflitos evitados na janela escolhida.</p>
+                </div>
+                <div class="form-grade form-grade-3">
+                  <div class="campo">
+                    <label for="relatorio-inicio">De</label>
+                    <input id="relatorio-inicio" type="datetime-local" class="form-control" />
+                  </div>
+                  <div class="campo">
+                    <label for="relatorio-fim">Até</label>
+                    <input id="relatorio-fim" type="datetime-local" class="form-control" />
+                  </div>
+                  <div class="campo campo-acao">
+                    <button type="submit" class="btn btn-primary">Gerar relatório</button>
+                  </div>
+                </div>
+                <p id="relatorio-criterio" class="texto-suave pequeno"></p>
+                <div class="tabela-rolavel">
+                  <table class="tabela" id="tabela-relatorio">
+                    <thead>
+                      <tr><th>Recurso</th><th>Tipo</th><th>Reservas</th><th>Horas</th><th>Ocupação</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                  </table>
+                </div>
+                <p id="relatorio-conflitos" class="relatorio-conflitos"></p>
+              </form>
             </div>
           </section>
 

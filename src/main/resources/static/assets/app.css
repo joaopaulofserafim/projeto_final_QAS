@@ -1276,3 +1276,527 @@ code {
     flex: 1 1 auto;
   }
 }
+/* =====================================================================
+   Ajustes v3: campos, seções de recursos, histórico por cartão,
+   aviso no menu, administração organizada e marca.
+   ===================================================================== */
+
+/* ---------- Campos de formulário ---------- */
+.form-control,
+.form-select {
+  min-height: 44px;
+  border-color: var(--line-forte);
+  border-radius: var(--radius-sm);
+  background-color: #fff;
+  font-size: .95rem;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+.form-control:hover:not(:focus),
+.form-select:hover:not(:focus) {
+  border-color: #9fb0cd;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(31, 86, 179, .16);
+  outline: 0;
+}
+
+.form-select {
+  padding-right: 2.4rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235d6b85' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpath d='m6 9 6 6 6-6'/%3e%3c/svg%3e");
+  background-size: 16px 16px;
+  background-position: right .8rem center;
+}
+
+.form-select option,
+.form-select optgroup {
+  color: var(--ink);
+}
+
+input[type="datetime-local"].form-control {
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: .6;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+input[type="number"].form-control {
+  -moz-appearance: textfield;
+}
+
+.campo label {
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+  color: #46546e;
+}
+
+.filtros {
+  padding: 1.25rem 1.35rem;
+  gap: 1.1rem;
+}
+
+.filtros-quando {
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.chip-botao {
+  min-height: 34px;
+}
+
+.chip-botao:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.aviso-periodo {
+  margin: 0;
+  padding: .6rem .85rem;
+  border-left: 3px solid var(--verm);
+  background: var(--verm-claro);
+  color: #8f241e;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: .9rem;
+}
+
+.regra-limite {
+  margin: 0;
+  font-size: .8rem;
+  color: var(--muted);
+  padding: .5rem .7rem;
+  background: var(--fundo-suave);
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Recursos separados por seção ---------- */
+#grade-recursos {
+  display: block;
+  margin-top: 1.4rem;
+}
+
+.secao-recursos + .secao-recursos {
+  margin-top: 1.8rem;
+}
+
+.secao-recursos-titulo {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  font-size: 1.05rem;
+  margin: 0 0 .8rem;
+  padding-bottom: .55rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.secao-recursos-titulo .ic {
+  color: var(--blue);
+  width: 18px;
+  height: 18px;
+}
+
+.contagem {
+  font-family: var(--sans);
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--fundo-suave);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: .05rem .5rem;
+  margin-left: .1rem;
+}
+
+.grade-itens {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+  gap: .9rem;
+}
+
+/* ---------- Histórico dentro do cartão ---------- */
+.rv-historico {
+  grid-column: 1 / -1;
+  border-top: 1px dashed var(--line-forte);
+  padding-top: .85rem;
+}
+
+.linha-tempo {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 .4rem;
+}
+
+.linha-tempo li {
+  position: relative;
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr);
+  gap: .2rem 1rem;
+  padding: 0 0 .7rem 1.2rem;
+  font-size: .88rem;
+  border-left: 2px solid var(--line);
+}
+
+.linha-tempo li:last-child {
+  padding-bottom: 0;
+  border-left-color: transparent;
+}
+
+.linha-tempo li::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: .3rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--blue);
+}
+
+.lt-quando {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Aviso novo no menu ---------- */
+.menu-icone {
+  position: relative;
+  display: inline-flex;
+}
+
+.menu-badge {
+  position: absolute;
+  top: -7px;
+  right: -9px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--verm);
+  color: #fff;
+  font-size: .64rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--fundo-suave);
+}
+
+.notificacao.nova {
+  border-color: #b9cdf0;
+  background: var(--blue-claro);
+}
+
+.notificacao .novo {
+  color: var(--blue);
+  font-weight: 700;
+}
+
+/* ---------- Formulários em grade (retirada e administração) ---------- */
+.cartao-form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.cartao-cabecalho .cartao-titulo {
+  margin-bottom: .2rem;
+}
+
+.cartao-cabecalho p {
+  margin: 0;
+  font-size: .88rem;
+}
+
+.cartao-cabecalho {
+  margin-bottom: .9rem;
+}
+
+.cartao-form .cartao-cabecalho {
+  margin-bottom: 0;
+}
+
+.form-grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.1rem;
+}
+
+.form-grade-3 {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.form-grade .campo-cheio {
+  grid-column: 1 / -1;
+}
+
+.form-grade > * {
+  min-width: 0;
+}
+
+.form-rodape {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+#form-retirada {
+  max-width: 720px;
+  margin-bottom: 1.6rem;
+}
+
+/* ---------- Administração ---------- */
+.sub-abas {
+  display: flex;
+  gap: .25rem;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 1.4rem;
+  overflow-x: auto;
+}
+
+.sub-aba-botao {
+  border: 0;
+  background: none;
+  padding: .7rem 1rem;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: .92rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+
+.sub-aba-botao:hover {
+  color: var(--ink);
+}
+
+.sub-aba-botao.ativo {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.sub-aba-botao:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.grade-admin {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.3rem;
+}
+
+#form-relatorio {
+  margin-top: 0;
+}
+
+.lista-compacta {
+  display: grid;
+  max-height: 520px;
+  overflow-y: auto;
+}
+
+.lista-compacta-grupo {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  font-size: .92rem;
+  margin: 1rem 0 .3rem;
+}
+
+.lista-compacta-grupo:first-child {
+  margin-top: 0;
+}
+
+.lista-compacta-grupo .ic {
+  width: 16px;
+  height: 16px;
+  color: var(--blue);
+}
+
+.item-compacto {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: .6rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.item-compacto strong {
+  display: block;
+  font-weight: 600;
+}
+
+.item-compacto small {
+  color: var(--muted);
+}
+
+.item-compacto.inativo strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.lista-compacta .vazio {
+  padding: 1.4rem .8rem;
+}
+
+/* ---------- Marca ---------- */
+.brand-marca .ic {
+  width: 27px;
+  height: 27px;
+}
+
+.brand-marca {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+}
+
+.login-hero {
+  justify-content: center;
+  align-items: center;
+}
+
+.emblema {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+}
+
+.emblema-selo {
+  width: clamp(150px, 17vw, 210px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  color: var(--blue-marinho);
+  box-shadow: 0 0 0 10px rgba(255, 255, 255, .08), 0 0 0 22px rgba(255, 255, 255, .04);
+}
+
+.emblema-icone {
+  width: 58%;
+  height: 58%;
+}
+
+.emblema-nome {
+  margin-top: 1.6rem;
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  letter-spacing: -.01em;
+  line-height: 1.05;
+  color: #fff;
+}
+
+.emblema-filete {
+  width: 56px;
+  height: 3px;
+  background: var(--ambar);
+  border-radius: 2px;
+}
+
+.emblema-lema {
+  color: #b7c7e6;
+  font-size: .82rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+}
+
+/* ---------- Responsivo dos ajustes ---------- */
+@media (max-width: 1199px) {
+  .grade-admin {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 991px) {
+  .login-hero {
+    padding: 2rem 1.5rem 2.2rem;
+  }
+
+  .emblema {
+    flex-direction: row;
+    gap: .9rem;
+    text-align: left;
+  }
+
+  .emblema-selo {
+    width: 64px;
+    box-shadow: none;
+  }
+
+  .emblema-nome {
+    margin-top: 0;
+    font-size: 1.6rem;
+  }
+
+  .emblema-filete,
+  .emblema-lema {
+    display: none;
+  }
+
+  .menu-badge {
+    top: -5px;
+    right: -10px;
+    box-shadow: 0 0 0 2px #fff;
+  }
+}
+
+@media (max-width: 575px) {
+  .filtros-linha,
+  .filtros-quando,
+  .form-grade,
+  .form-grade-3,
+  .grade-itens {
+    grid-template-columns: 1fr;
+  }
+
+  .linha-tempo li {
+    grid-template-columns: 1fr;
+  }
+
+  .form-rodape .btn {
+    width: 100%;
+  }
+}
+
+/* Filtros: tipo, nome (largo), capacidade, localização e competência numa linha de seis colunas */
+.filtros-linha:not(.filtros-quando) {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.filtros-linha:not(.filtros-quando) .campo-grande {
+  grid-column: span 2;
+}
+
+@media (max-width: 767px) {
+  .filtros-linha:not(.filtros-quando) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575px) {
+  .filtros-linha:not(.filtros-quando) {
+    grid-template-columns: 1fr;
+  }
+
+  .filtros-linha:not(.filtros-quando) .campo-grande {
+    grid-column: auto;
+  }
+}

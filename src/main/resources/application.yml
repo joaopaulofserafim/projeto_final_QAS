@@ -42,6 +42,11 @@ sor:
     # Senha dos usuários de demonstração (admin, responsavel, solicitante, solicitante2). Defina SOR_SENHA_INICIAL em implantações reais.
     segredo: ${SOR_SENHA_INICIAL:Senha@123}
   fuso-horario: America/Sao_Paulo
+  calendario:
+    # Feriados nacionais (fixos, Carnaval, Sexta-feira Santa e Corpus Christi) são calculados automaticamente.
+    feriados-nacionais: true
+    # Recessos e feriados locais da instituição, separados por vírgula (aaaa-mm-dd).
+    feriados-extras: ${SOR_FERIADOS_EXTRAS:}
   notificacao:
     # simulado: registra a notificação sem chamar serviço externo
     # http: envia para a API externa configurada em "url" (WireMock nos testes)
