@@ -1800,3 +1800,312 @@ input[type="number"].form-control {
     grid-column: auto;
   }
 }
+
+/* =====================================================================
+   Ajustes v4: modal central, aviso com fechar, senha visível,
+   erro de login discreto, cartões indisponíveis e edição de recurso.
+   ===================================================================== */
+
+/* ---------- Aviso flutuante com botão fechar ---------- */
+.toast-sor {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+  padding-right: .6rem;
+}
+
+.toast-corpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-fechar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin: -.2rem -.1rem 0 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.toast-fechar:hover {
+  background: var(--fundo-suave);
+  color: var(--ink);
+}
+
+.toast-fechar .ic {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------- Modal central ---------- */
+body.com-modal {
+  overflow: hidden;
+}
+
+.modal-sor {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 42, 92, .45);
+}
+
+.modal-sor.d-none {
+  display: none;
+}
+
+.modal-caixa {
+  position: relative;
+  width: min(460px, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.8rem 1.6rem 1.4rem;
+  text-align: center;
+  box-shadow: 0 18px 48px rgba(15, 42, 92, .28);
+  animation: modal-entrar .16s ease-out;
+}
+
+@keyframes modal-entrar {
+  from {
+    transform: translateY(8px) scale(.98);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-caixa {
+    animation: none;
+  }
+}
+
+.modal-fechar {
+  position: absolute;
+  top: .7rem;
+  right: .7rem;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.modal-fechar:hover {
+  background: var(--fundo-suave);
+  color: var(--ink);
+}
+
+.modal-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  margin-bottom: .8rem;
+  background: var(--blue-claro);
+  color: var(--blue);
+}
+
+.modal-icone .ic {
+  width: 30px;
+  height: 30px;
+}
+
+.modal-sor[data-tipo="sucesso"] .modal-icone {
+  background: var(--verde-claro);
+  color: var(--verde);
+}
+
+.modal-sor[data-tipo="erro"] .modal-icone,
+.modal-sor[data-tipo="pergunta"] .modal-icone {
+  background: var(--verm-claro);
+  color: var(--verm);
+}
+
+.modal-sor[data-tipo="aviso"] .modal-icone {
+  background: var(--ambar-claro);
+  color: var(--ambar-escuro);
+}
+
+.modal-caixa h2 {
+  font-size: 1.35rem;
+  margin: 0 0 .4rem;
+}
+
+.modal-texto p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.modal-texto ul {
+  list-style: none;
+  text-align: left;
+  margin: 1rem 0 0;
+  padding: .7rem .9rem;
+  background: var(--fundo-suave);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: .9rem;
+}
+
+.modal-texto li + li {
+  margin-top: .3rem;
+}
+
+.modal-acoes {
+  display: flex;
+  justify-content: center;
+  gap: .6rem;
+  margin-top: 1.4rem;
+  flex-wrap: wrap;
+}
+
+.modal-acoes .btn {
+  min-width: 140px;
+}
+
+.btn-perigo-cheio {
+  background: var(--verm);
+  border: 1px solid var(--verm);
+  color: #fff;
+}
+
+.btn-perigo-cheio:hover,
+.btn-perigo-cheio:focus-visible {
+  background: #a42b25;
+  border-color: #a42b25;
+  color: #fff;
+}
+
+/* ---------- Entrada: senha visível e erro discreto ---------- */
+.campo-senha {
+  position: relative;
+}
+
+.campo-senha .form-control {
+  padding-right: 2.9rem;
+}
+
+.botao-olho {
+  position: absolute;
+  top: 50%;
+  right: .35rem;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.botao-olho:hover {
+  color: var(--ink);
+  background: var(--fundo-suave);
+}
+
+.botao-olho:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 1px;
+}
+
+.login-erro {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin: -.2rem 0 0;
+  color: var(--verm);
+  font-size: .88rem;
+  font-weight: 500;
+}
+
+.login-erro::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.login-erro.d-none {
+  display: none;
+}
+
+/* ---------- Cartões indisponíveis: visíveis, em cinza e sem clique ---------- */
+.recurso-card.indisponivel {
+  background: #f3f4f7;
+  border-color: var(--line);
+  cursor: not-allowed;
+}
+
+.recurso-card.indisponivel:hover {
+  border-color: var(--line);
+}
+
+.recurso-card.indisponivel .rc-nome,
+.recurso-card.indisponivel .rc-meta,
+.recurso-card.indisponivel .rc-codigo,
+.recurso-card.indisponivel .rc-tipo,
+.recurso-card.indisponivel .rc-tags {
+  color: #8d97a8;
+  filter: grayscale(1);
+}
+
+.recurso-card.indisponivel .form-check-input {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.recurso-card.indisponivel .situacao .ocupado {
+  color: #6b7486;
+}
+
+.situacao small {
+  display: block;
+  margin-top: .15rem;
+  color: var(--muted);
+}
+
+/* ---------- Edição de recurso ---------- */
+.form-rodape-botoes,
+.item-acoes {
+  display: inline-flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+#form-recurso.editando {
+  border-color: var(--blue);
+  box-shadow: inset 0 3px 0 var(--blue);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  background-color: var(--fundo-suave);
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+@media (max-width: 575px) {
+  .modal-acoes .btn {
+    flex: 1 1 100%;
+  }
+
+  .item-compacto {
+    flex-wrap: wrap;
+  }
+}
