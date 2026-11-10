@@ -1,6 +1,6 @@
 # RTM — Matriz de Rastreabilidade (requisito → risco → teste → evidência)
 
-**Versão:** 1.0.0-rc1 · **Data:** 09/11/2026 · **Fonte dos requisitos:** `PRD/requisitos/` · **Riscos:** `PRD/arquitetura/RISCOS_ARQUITETURAIS.md`
+**Versão:** 1.0.0-rc1 · **Data:** 10/11/2026 · **Fonte dos requisitos:** `PRD/requisitos/` · **Riscos:** `PRD/arquitetura/RISCOS_ARQUITETURAIS.md`
 A matriz de origem (persona → jornada → requisito → critério de aceite) continua em [`PRD/requisitos/MATRIZ_RASTREABILIDADE.md`](PRD/requisitos/MATRIZ_RASTREABILIDADE.md). Esta matriz acrescenta **implementação, testes automatizados e evidências**.
 
 **Cobertura da matriz:** 36/36 requisitos funcionais e 14/14 não funcionais com teste automatizado. **Requisitos críticos (11): 11/11 com teste e evidência.**
@@ -9,9 +9,9 @@ A matriz de origem (persona → jornada → requisito → critério de aceite) c
 
 | Código | Evidência |
 |---|---|
-| **CI** | Pipeline do GitHub Actions verde com a suíte completa (247 testes, incluindo E2E): [run 42722036100](https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100) e execuções seguintes da branch `feat/epic-1-mvp` |
+| **CI** | Pipeline do GitHub Actions verde com a suíte completa (283 testes, incluindo E2E): [run 42722036100](https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42722036100) e execuções seguintes (PRs #2 a #5), todas com o Quality Gate do SonarCloud aprovado |
 | **TDD** | RED → GREEN da story 1.5: [`tdd-1.5-red.md`](docs/qa/evidencias/tdd-1.5-red.md) (CI vermelho: [run 42718786331](https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42718786331)) e [`tdd-1.5-green.md`](docs/qa/evidencias/tdd-1.5-green.md) (CI verde: [run 42719530475](https://github.com/joaopaulofserafim/projeto_final_QAS/actions/runs/42719530475)) |
-| **COB** | Relatório JaCoCo publicado como artefato do CI (`relatorios-de-qualidade`): 97,7% linhas, 88,0% branches |
+| **COB** | Relatório JaCoCo publicado como artefato do CI (`relatorios-de-qualidade`): 97,9% linhas, 88,5% branches |
 | **CARGA** | [`docs/qa/RELATORIO_CARGA.md`](docs/qa/RELATORIO_CARGA.md) e [`statistics-oficial-2026-11-09.json`](docs/qa/evidencias/carga/statistics-oficial-2026-11-09.json) |
 | **TELA** | Capturas em [`docs/qa/evidencias/telas/`](docs/qa/evidencias/telas/) |
 | **GATE** | QA gate da story em [`docs/qa/gates/`](docs/qa/gates/) |
@@ -27,10 +27,10 @@ Os testes ficam em `src/test/java/br/edu/sor/` (o pacote está omitido abaixo). 
 | RF-003 | Encerrar sessão | | RA-012 | 1.3 | `POST /api/v1/auth/logout` | `SegurancaApiTest.sessaoWebExigeTokenCsrf…EncerraNoLogout` (A); `InterfaceE2ETest.sairEncerraASessao` (E) | CI |
 | RF-004 | Pesquisar recursos | | RA-007 | 1.4 | `GET /api/v1/recursos` (Specification + porta de ocupação) | `RecursoApiTest.pesquisaCombinaFiltros` (P, 8 filtros), `filtroDeDisponibilidadeExigePeriodoCompleto`; `ReservaApiTest.consultaDeDisponibilidadeAgendaEPesquisa…` (A); `InterfaceE2ETest.solicitantePesquisa…` (E) | CI, TELA |
 | RF-005 | Consultar detalhes de recurso | | — | 1.4 | `GET /api/v1/recursos/{id}` | `RecursoApiTest.detalhaRecursoComCompetencias`, `recursoInexistenteRetorna404` (A) | CI |
-| RF-006 | Validar período informado | **Sim** | RA-001 | 1.1, 1.5 | `disponibilidade/PeriodoReserva`, `Periodos` | `PeriodoReservaTest` (U/P, 18); `PeriodosTest` (P, 7); `ReservaApiTest.periodoInvalido…` (P), `sobreposicaoNoMesmoRecurso…` (P, 7 intervalos); `ConstraintExclusaoTest.bancoRecusaPeriodoInvertido` (I) | CI, TDD, GATE 1.1 |
+| RF-006 | Validar período informado (término após o início, início futuro, **sem feriados — RN-031**) | **Sim** | RA-001 | 1.1, 1.5 | `disponibilidade/PeriodoReserva`, `Periodos`, `CalendarioAcademico` | `PeriodoReservaTest` (U/P, 18); `PeriodosTest` (P, 7); `ReservaApiTest.periodoInvalido…` (P, inclui feriado e período que cruza feriado), `sobreposicaoNoMesmoRecurso…` (P, 7 intervalos); `CalendarioAcademicoTest` (P, 31: Páscoa, feriados fixos e móveis, recesso configurado, meia-noite); `interfaceConsultaOsFeriadosConfigurados` (A); `ConstraintExclusaoTest.bancoRecusaPeriodoInvertido` (I) | CI, TDD, GATE 1.1 |
 | RF-007 | Verificar disponibilidade e conflitos (inclusive professor) | **Sim** | RA-001, RA-002, RA-007 | 1.4, 1.5 | `DisponibilidadeService.consultar/garantirLivre`, `GET /api/v1/disponibilidade` | `ReservaApiTest.sobreposicao…`, `professorNaoPodeSerAlocadoEmDuasSalas…`, `recursoDesativadoNaoPodeSerReservado`, `consultaDeDisponibilidade…` (A); `ManutencaoApiTest.recursoEmManutencao…` (A) | CI, TDD |
 | RF-008 | Impedir dupla aceitação concorrente | **Sim** | RA-001 | 1.5 | Lock `SELECT … FOR UPDATE` em ordem + constraint `EXCLUDE USING gist` (ADR-004) | `ConcorrenciaReservaTest` (C, 5 cenários, 20 threads); `ConstraintExclusaoTest` (I, 3); `ManutencaoApiTest.manutencaoEReservasSimultaneas…` (C); `CicloDeVidaReservaTest.aprovacoesSimultaneas…` (C); corrida JMeter 30 simultâneos (L) | CI, TDD, CARGA |
-| RF-009 | Criar solicitação de reserva | **Sim** | RA-001 | 1.5 | `POST /api/v1/reservas` | `ReservaApiTest.reservaDeRecursosComunsNasceAprovada…`, `pedidoComVariosRecursosEhTudoOuNada`, `camposObrigatoriosAusentes…`, `recursoInexistenteRetorna404` (A); `InterfaceE2ETest.solicitantePesquisa…` (E) | CI, TDD, TELA |
+| RF-009 | Criar solicitação de reserva | **Sim** | RA-001 | 1.5 | `POST /api/v1/reservas` | `ReservaApiTest.reservaDeRecursosComunsNasceAprovada…`, `pedidoComVariosRecursosEhTudoOuNada`, `reservaNaoPodePrenderOCatalogoInteiro` (RN-032: 1 sala, 1 professor, 3 itens), `camposObrigatoriosAusentes…`, `recursoInexistenteRetorna404` (A); `InterfaceE2ETest.solicitanteReservaVeResultadoEmJanela…`, `conflitoNoMomentoDoEnvio…` (E) | CI, TDD, TELA |
 | RF-010 | Encaminhar recurso restrito para aprovação | **Sim** | RA-004 | 1.5, 1.6 | Estado inicial `SOLICITADA` + justificativa obrigatória (RN-026) | `ReservaApiTest.recursoRestritoExigeJustificativa…`; `CicloDeVidaReservaTest.responsavelVeFilaEAprova…` (A); `SegurancaApiTest` (Admin/Solicitante aprovar → 403) | CI |
 | RF-011 | Consultar reservas próprias | | — | 1.5 | `GET /api/v1/reservas/minhas` | `ReservaApiTest.minhasReservasFiltraPorEstado`, `solicitanteNaoVeReserva…` (A); `InterfaceE2ETest.solicitantePesquisa…` (E) | CI |
 | RF-012 | Consultar histórico de reserva | | RA-005 | 1.6 | `GET /api/v1/reservas/{id}/historico` | `CicloDeVidaReservaTest.responsavelVeFilaEAprova…`, `historicoDaReservaNaoEhVisivel…` (A) | CI |
@@ -71,11 +71,11 @@ Os testes ficam em `src/test/java/br/edu/sor/` (o pacote está omitido abaixo). 
 | RNF-006 | Desempenho de consultas | RA-010 | JMeter: p95 6–8 ms (meta ≤ 500 ms) | CARGA |
 | RNF-007 | Capacidade sob carga | RA-010 | JMeter: 50 usuários + 10 escrevendo, 0% de erro | CARGA |
 | RNF-008 | Confiabilidade em falhas | RA-008 | `NotificacaoWireMockTest` (500 e timeout não desfazem a reserva) | CI |
-| RNF-009 | Usabilidade e feedback | — | `InterfaceE2ETest` (mensagens de sucesso e conflito) | CI, TELA |
+| RNF-009 | Usabilidade e feedback | — | `InterfaceE2ETest` (janela central de confirmação, indisponibilidade e cancelamento; erro de login discreto; cartões bloqueados; campos e seleção limpos após reservar; histórico por cartão) | CI, TELA |
 | RNF-010 | Responsividade e acessibilidade | — | `InterfaceE2ETest.interfaceFuncionaEmTelaDeCelular…` (sem rolagem horizontal em 390 px); rótulos em todos os campos | CI, TELA |
 | RNF-011 | Integridade da auditoria | RA-005 | `AuditoriaApiTest` (imutável no banco, sem endpoint de alteração) | CI |
 | RNF-012 | Observabilidade de falhas | — | Código de rastreio em erro 500 (`ApiExceptionHandlerTest`); log de falha de notificação | CI |
-| RNF-013 | Testabilidade | — | 247 testes no CI; gate JaCoCo 80/70 | CI, COB |
+| RNF-013 | Testabilidade | — | 283 testes no CI; gate JaCoCo 80/70; Quality Gate do SonarCloud | CI, COB |
 | RNF-014 | Consistência documental | RA-014 | Esta RTM; stories 1.1–1.10 com QA gate | GATE |
 
 ## Riscos arquiteturais → mitigação verificada

@@ -63,8 +63,19 @@ Demonstrar, com evidência automatizada e repetível, que o sistema cumpre as re
 - [x] Teste de concorrência real verde (limitador "dupla reserva").
 - [x] Matriz de autorização e varredura anônima verdes (limitador "falha de autorização").
 - [x] Metas de carga atendidas e integridade após a carga.
-- [ ] SonarCloud sem bugs/vulnerabilidades críticos — depende de configurar o token no GitHub (ver README).
+- [x] SonarCloud sem bugs/vulnerabilidades críticos — Quality Gate aprovado nos pull requests (token `SONAR_TOKEN` configurado; análise automática do Sonar desligada, a análise roda no pipeline).
 - [x] Nenhum defeito aberto de severidade crítica ou alta.
+
+## 7.1. Regressões de usabilidade (10/11/2026)
+
+Uso manual da interface revelou falhas que viraram teste E2E de regressão:
+
+| Falha encontrada | Teste que a protege |
+|---|---|
+| Disponibilidade só aparecia após consultar em outro item (estado velho na tela) | `solicitanteReservaVeResultadoEmJanelaECartaoOcupadoFicaBloqueado` (cartão livre → reservado e cinza sem recarregar) |
+| Campos e cartões escolhidos permaneciam após reservar | mesmo teste (`finalidade` vazia, "Nenhum recurso escolhido") |
+| Conflito no instante do envio não era explicado | `conflitoNoMomentoDoEnvioApareceEmJanelaCentral` |
+| Erro de login em aviso flutuante e sem opção de ver a senha | `loginInvalidoMostraMensagemCompreensivel` |
 
 ## 8. Como executar
 

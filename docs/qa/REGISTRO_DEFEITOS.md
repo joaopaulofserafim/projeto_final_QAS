@@ -1,9 +1,9 @@
 # Registro de defeitos
 
-**Escopo:** Epic 1 (RC 1.0.0-rc1) · **Atualizado em:** 09/11/2026
+**Escopo:** Epic 1 (RC 1.0.0-rc1) · **Atualizado em:** 10/11/2026
 Cada defeito tem origem verificável (auditoria ou teste que falhou), prioridade e o commit da correção. Severidade: impacto no produto/avaliação. Prioridade: P0 bloqueia a entrega, P1 essencial, P2 importante, P3 melhoria.
 
-**Resumo:** 12 defeitos registrados — 10 corrigidos, 2 aceitos com justificativa. Nenhum defeito aberto de severidade crítica ou alta.
+**Resumo:** 14 defeitos registrados — 12 corrigidos, 2 aceitos com justificativa. Nenhum defeito aberto de severidade crítica ou alta.
 
 | ID | Severidade | Prioridade | Encontrado por | Descrição | Correção | Commit | Situação |
 |---|---|---|---|---|---|---|---|
@@ -19,6 +19,8 @@ Cada defeito tem origem verificável (auditoria ou teste que falhou), prioridade
 | DEF-010 | Média | P1 | Execução do JMeter | O plugin do JMeter era pulado em silêncio porque obedece a `skipTests`, usada no perfil `carga`. | O perfil desliga só o Surefire. | `a395127` | Corrigido |
 | DEF-011 | Média | P1 | Execução do JMeter (2ª rodada: 12% de erro) | O plano de carga dependia do estado do banco: a escrita sorteava o dia e colidia com reservas da rodada anterior (347 respostas 409). Defeito do plano, não da aplicação. | A preparação cria salas novas por execução; a escrita usa dias sequenciais nelas. | `a395127` | Corrigido |
 | DEF-012 | Baixa | P3 | Execução do JMeter (1ª rodada) | Corrida de 30 pedidos simultâneos levou ~2,1 s com a JVM recém-iniciada (BCrypt + compilação JIT). | Procedimento com aquecimento; com a JVM aquecida, p95 de 684 ms (meta ≤ 1 s). | `a395127` | Aceito |
+| DEF-013 | Média | P2 | Uso manual da interface (10/11) | A disponibilidade de um recurso só era recalculada ao consultar outro item e voltar: um material liberado continuava "ocupado" na tela, e a lista não mostrava cadastros novos. | A disponibilidade é calculada para todos os cartões a cada busca, mudança de período, reserva e a cada 20 s; resultados antigos são descartados. Cartão ocupado fica cinza e sem clique. | PR #5 | Corrigido (teste E2E `solicitanteReservaVeResultado…`) |
+| DEF-014 | Média | P2 | Uso manual da interface (10/11) | Finalidade, justificativa e cartões escolhidos permaneciam depois de reservar; o navegador preenchia os campos sozinho e, ao sair da conta, nada era limpo (a próxima pessoa via os dados da anterior). | Campos e seleção limpos após reservar e ao sair; `autocomplete="off"` nos campos da reserva. | PR #5 | Corrigido (teste E2E) |
 
 ## Como registrar novos defeitos
 

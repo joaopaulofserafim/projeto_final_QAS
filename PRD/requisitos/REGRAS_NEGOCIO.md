@@ -209,6 +209,14 @@ As regras abaixo decorrem das decisões registradas em `PENDENCIAS_DECISOES.md` 
 **Descricao:** Reserva com material ou equipamento retirado e não devolvido não pode ser concluída. A devolução do último item conclui automaticamente a reserva que contém apenas materiais/equipamentos.  
 **Requisitos associados:** RF-019, RF-020; detalha RN-020 e RN-021.
 
+### RN-031 — Sem reservas em feriados
+**Descricao:** Nenhum período de reserva ou de alteração pode tocar um dia de feriado. Feriados nacionais (Confraternização Universal, Carnaval, Sexta-feira Santa, Tiradentes, Dia do Trabalho, Corpus Christi, Independência, Nossa Senhora Aparecida, Finados, Proclamação da República, Consciência Negra e Natal) são calculados para qualquer ano; recessos e feriados locais da instituição são configurados. Um período que termina exatamente à meia-noite não conta o dia seguinte. A interface avisa antes do envio e o servidor recusa com mensagem que cita a data.  
+**Requisitos associados:** RF-006; detalha DP-015.
+
+### RN-032 — Limite de recursos por reserva
+**Descricao:** Cada reserva aceita no máximo 1 sala, 1 professor e 3 itens entre materiais e equipamentos, para que um único pedido não ocupe o catálogo inteiro. A interface bloqueia a escolha excedente e o servidor recusa o pedido com a regra explicada; para mais recursos, o solicitante faz reservas separadas.  
+**Requisitos associados:** RF-009; detalha DP-013.
+
 ## Pendencias de negocio relacionadas
 
 Ver `PENDENCIAS_DECISOES.md`: DP-001 (solicitacao pendente ocupa horario), DP-002 (recursos restritos e dados de decisao), DP-003 (matriz/escopo de permissoes), DP-004 (reservas existentes durante manutencao), DP-005 (desativacao com reservas e criterios cadastrais), DP-006 (transicoes e indisponibilidade durante aprovacao), DP-007 (alteracao/cancelamento), DP-008 (retirada/devolucao), DP-009 (notificacoes), DP-010 (metricas/relatorios), DP-011 (auditoria/retencao), DP-012 (contrato de fluxos publicos/API academica), DP-013 (solicitacao multipla), DP-014 (metas de qualidade), DP-015 (calendario e parametros temporais) e DP-016 (dados de competencia/disponibilidade docente).
